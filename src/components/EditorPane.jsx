@@ -1,15 +1,62 @@
-import PropTypes from 'prop-types'
+import { useEffect } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Highlight from '@tiptap/extension-highlight'
+import Mathematics from '@tiptap/extension-mathematics'
+import 'katex/dist/katex.min.css'
 
 export function EditorPane({
   loading,
   selectedNote,
   onCreateNote,
   onTitleChange,
-  editorRef,
   onEditorChange,
   onEditorKeyDown,
-  onEditorContextMenu,
+  onSlashKey,
+  onContextMenu,
+  setEditorInstance,
 }) {
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({ heading: { levels: [1, 2, 3, 4] } }),
+        Highlight,
+        Mathematics,
+      ],
+      content: selectedNote?.content || '',
+      onCreate: ({ editor }) => setEditorInstance(editor),
+      editorProps: {
+        handleDOMEvents: {
+          contextmenu: (view, event) => {
+            onContextMenu(event)
+            return false
+          },
+          keydown: (view, event) => {
+            if (event.key === '/') onSlashKey(event)
+            return false
+          },
+        },
+        attributes: {
+          class:
+            'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none p-1',
+        },
+      },
+      onUpdate: ({ editor }) => onEditorChange(editor.getHTML()),
+      immediatelyRender: false,
+    },
+    [selectedNote?.id],
+  )
+
+  // Sync content when switching notes
+  useEffect(() => {
+    if (editor && selectedNote?.content !== undefined) {
+      const current = editor.getHTML()
+      if (current !== selectedNote.content) {
+        editor.commands.setContent(selectedNote.content || '')
+      }
+    }
+  }, [selectedNote?.id])
+
   if (loading) {
     return (
       <section className="flex-1 overflow-hidden px-8 py-5">
@@ -37,6 +84,7 @@ export function EditorPane({
     )
   }
 
+  // ✅ This is the real editor render — now correctly outside the !selectedNote guard
   return (
     <section className="flex-1 overflow-hidden px-8 py-5">
       <div className="mx-auto flex h-full max-w-3xl flex-col rounded-xl border border-slate-800/80 bg-slate-950/70 px-6 py-4 shadow-soft">
@@ -53,30 +101,8 @@ export function EditorPane({
             ? new Date(selectedNote.updated_at).toLocaleString()
             : 'just now'}
         </p>
-        <div
-          key={selectedNote.id}
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={onEditorChange}
-          onKeyDown={onEditorKeyDown}
-          onContextMenu={onEditorContextMenu}
-          className="scroll-thin min-h-0 w-full flex-1 overflow-y-auto whitespace-pre-wrap border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none"
-          dangerouslySetInnerHTML={{ __html: selectedNote.content || '' }}
-        />
+        <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
       </div>
     </section>
   )
 }
-
-EditorPane.propTypes = {
-  loading: PropTypes.bool.isRequired,
-  selectedNote: PropTypes.object,
-  onCreateNote: PropTypes.func.isRequired,
-  onTitleChange: PropTypes.func.isRequired,
-  editorRef: PropTypes.object.isRequired,
-  onEditorChange: PropTypes.func.isRequired,
-  onEditorKeyDown: PropTypes.func.isRequired,
-  onEditorContextMenu: PropTypes.func.isRequired,
-}
-

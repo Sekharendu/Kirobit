@@ -19,6 +19,34 @@ function App() {
   const [editingItem, setEditingItem] = useState(null) // { kind: 'folder'|'note', id, tempName, mode: 'rename'|'create' }
   const [openFolders, setOpenFolders] = useState([])
   const editorRef = useRef(null)
+  const [editor,setEditor]=useState()
+  const [menu, setMenu] = useState(null);
+  const [content,setContent]=useState('');
+  
+
+  const applyCommand= (command)=>{
+    const chain=editor.chain().focus();
+    const actions={
+      'h1':()=> chain.toggleHeading({ level: 1 }).run(),
+      'h2':()=> chain.toggleHeading({ level: 2 }).run(),
+      'h3':()=> chain.toggleHeading({ level: 3 }).run(),
+      'h4':()=> chain.toggleHeading({ level: 4 }).run(),
+      'body':()=> chain.setParagraph().run(),
+      'bold':()=> chain.toggleBold().run(),
+      'italic':()=> chain.toggleItalic().run(),
+      'strike':()=> chain.toggleStrike().run(),
+      'highlight':()=> chain.toggleHighlight().run(),
+      'bullet':()=> chain.toggleBulletList().run(),
+      'numbered':()=> chain.toggleOrderedList().run(),
+      'code':()=> chain.toggleCodeBlock().run(),
+      'formula':()=> chain.toggleMathBlock().run(),
+      'clear':()=> chain.clearNodes().unsetAllMarks().run()
+    };
+    if(actions[command]){
+      actions[command]();
+    }
+    setMenu(null);
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +82,40 @@ function App() {
 
     load()
   }, [])
+
+const handleContextMenu = (e) => {
+  e.preventDefault()
+  e.stopPropagation()  // prevent clearMenus() on the parent div from firing
+
+  // ✅ Use native selection — always accurate at right-click time
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed || selection.toString().trim() === '') return
+
+  setMenu({ x: e.clientX, y: e.clientY, type: 'context' })
+
+   const closeOnNextClick = () => {
+    setMenu(null)
+    document.removeEventListener('click', closeOnNextClick)
+  }
+
+  // Small timeout so this listener doesn't catch the current right-click's
+  // bubbling mouseup/click events
+  setTimeout(() => {
+    document.addEventListener('click', closeOnNextClick)
+  }, 0)
+}
+
+  const handleSlashKey = (e) => {
+    const rect = editor.options.element.getBoundingClientRect();
+    setMenu({ x: e.clientX, y: e.clientY, type: 'slash' });
+    setTimeout(() => {
+    const closeOnNextClick = () => {
+      setMenu(null)
+      document.removeEventListener('click', closeOnNextClick)
+    }
+    document.addEventListener('click', closeOnNextClick)
+  }, 0)
+  };
 
   const visibleNotes = useMemo(() => {
     let list = notes
@@ -251,59 +313,59 @@ function App() {
 
   const closeEditorMenu = () => setEditorMenu(null)
 
-  const applyFormatting = (command) => {
-    if (!editorRef.current) return
-    editorRef.current.focus()
+  // const applyFormatting = (command) => {
+  //   if (!editorRef.current) return
+  //   editorRef.current.focus()
 
-    const exec = (cmd, value = null) => {
-      document.execCommand(cmd, false, value)
-    }
+  //   const exec = (cmd, value = null) => {
+  //     document.execCommand(cmd, false, value)
+  //   }
 
-    switch (command) {
-      case 'bold':
-        exec('bold')
-        break
-      case 'italic':
-        exec('italic')
-        break
-      case 'strike':
-        exec('strikeThrough')
-        break
-      case 'highlight':
-        exec('backColor', 'yellow')
-        break
-      case 'h1':
-        exec('formatBlock', 'h1')
-        break
-      case 'h2':
-        exec('formatBlock', 'h2')
-        break
-      case 'h3':
-        exec('formatBlock', 'h3')
-        break
-      case 'h4':
-        exec('formatBlock', 'h4')
-        break
-      case 'bullet':
-        exec('insertUnorderedList')
-        break
-      case 'numbered':
-        exec('insertOrderedList')
-        break
-      case 'body':
-      case 'clear':
-        exec('removeFormat')
-        exec('formatBlock', 'p')
-        break
-      default:
-        break
-    }
+  //   switch (command) {
+  //     case 'bold':
+  //       exec('bold')
+  //       break
+  //     case 'italic':
+  //       exec('italic')
+  //       break
+  //     case 'strike':
+  //       exec('strikeThrough')
+  //       break
+  //     case 'highlight':
+  //       exec('backColor', 'yellow')
+  //       break
+  //     case 'h1':
+  //       exec('formatBlock', 'h1')
+  //       break
+  //     case 'h2':
+  //       exec('formatBlock', 'h2')
+  //       break
+  //     case 'h3':
+  //       exec('formatBlock', 'h3')
+  //       break
+  //     case 'h4':
+  //       exec('formatBlock', 'h4')
+  //       break
+  //     case 'bullet':
+  //       exec('insertUnorderedList')
+  //       break
+  //     case 'numbered':
+  //       exec('insertOrderedList')
+  //       break
+  //     case 'body':
+  //     case 'clear':
+  //       exec('removeFormat')
+  //       exec('formatBlock', 'p')
+  //       break
+  //     default:
+  //       break
+  //   }
 
-    if (editorRef.current) {
-      updateNoteContent({ content: editorRef.current.innerHTML })
-    }
-    closeEditorMenu()
-  }
+  //   if (editorRef.current) {
+  //     updateNoteContent({ content: editorRef.current.innerHTML })
+  //   }
+  //   closeEditorMenu()
+  // }
 
   const handleEditorKeyDown = (e) => {
     if (e.key === '/') {
@@ -316,25 +378,25 @@ function App() {
     }
   }
 
-  const applySlashCommand = (command) => {
-    if (!editorRef.current) return
-    editorRef.current.focus()
+  // const applySlashCommand = (command) => {
+  //   if (!editorRef.current) return
+  //   editorRef.current.focus()
 
-    if (command === 'code') {
-      document.execCommand('insertHTML', false, '<pre><code></code></pre>')
-    } else if (command === 'formula') {
-      document.execCommand('insertText', false, '$$  $$')
-    } else {
-      applyFormatting(command)
-      setSlashMenu(null)
-      return
-    }
+  //   if (command === 'code') {
+  //     document.execCommand('insertHTML', false, '<pre><code></code></pre>')
+  //   } else if (command === 'formula') {
+  //     document.execCommand('insertText', false, '$$  $$')
+  //   } else {
+  //     applyFormatting(command)
+  //     setSlashMenu(null)
+  //     return
+  //   }
 
-    if (editorRef.current) {
-      updateNoteContent({ content: editorRef.current.innerHTML })
-    }
-    setSlashMenu(null)
-  }
+  //   if (editorRef.current) {
+  //     updateNoteContent({ content: editorRef.current.innerHTML })
+  //   }
+  //   setSlashMenu(null)
+  // }
 
   const clearMenus = () => {
     closeSidebarContext()
@@ -466,14 +528,20 @@ function App() {
           />
 
           <EditorPane
+            content={content}
             loading={loading}
             selectedNote={selectedNote}
             onCreateNote={handleCreateNote}
             onTitleChange={handleTitleChange}
             editorRef={editorRef}
-            onEditorChange={handleEditorInput}
+            // onEditorChange={handleEditorInput}
+            // onEditorChange={setContent}
+            onEditorChange={(html) => updateNoteContent({ content: html })}
             onEditorKeyDown={handleEditorKeyDown}
             onEditorContextMenu={openEditorMenu}
+            onSlashKey={handleSlashKey}
+            onContextMenu={handleContextMenu}
+            setEditorInstance={setEditor}
           />
         </main>
       </div>
@@ -511,7 +579,7 @@ function App() {
       )}
 
       {/* Editor selection menu */}
-      {editorMenu && (
+      {/* {editorMenu && (
         <div
           className="fixed z-40 grid w-56 grid-cols-2 gap-1 rounded-md border border-slate-800 bg-slate-900/95 p-2 text-[11px] text-slate-100 shadow-soft"
           style={{ top: editorMenu.y, left: editorMenu.x }}
@@ -623,10 +691,10 @@ function App() {
             Clear Formatting
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Slash menu */}
-      {slashMenu && (
+      {/* {slashMenu && (
         <div
           className="fixed z-40 w-56 rounded-md border border-slate-800 bg-slate-900/95 p-1 text-[11px] text-slate-100 shadow-soft"
           style={{ top: slashMenu.y, left: slashMenu.x }}
@@ -729,6 +797,31 @@ function App() {
           >
             Numbered List
           </button>
+        </div>
+      )} */}
+
+      {menu && (
+        <div 
+          className="fixed z-50 w-48 rounded-lg border border-slate-700 bg-slate-800 p-1 shadow-xl"
+          style={{ top: menu.y, left: menu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {menu.type === 'context' ? (
+            <>
+              <button onClick={() => applyCommand('h1')} className="menu-btn">Heading 1</button>
+              <button onClick={() => applyCommand('h2')} className="menu-btn">Heading 2</button>
+              <button onClick={() => applyCommand('bold')} className="menu-btn font-bold">Bold</button>
+              <button onClick={() => applyCommand('italic')} className="menu-btn italic">Italic</button>
+              <button onClick={() => applyCommand('highlight')} className="menu-btn text-yellow-400">Highlight</button>
+              <button onClick={() => applyCommand('clear')} className="menu-btn text-rose-400 border-t border-slate-700 mt-1">Clear All</button>
+            </>
+          ) : (
+            <>
+              <div className="px-3 py-1 text-[10px] uppercase text-slate-500">Insert Block</div>
+              <button onClick={() => applyCommand('code')} className="menu-btn font-mono">Code Block</button>
+              <button onClick={() => applyCommand('math')} className="menu-btn font-serif">Math Formula</button>
+            </>
+          )}
         </div>
       )}
     </div>
