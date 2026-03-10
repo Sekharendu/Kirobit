@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
@@ -11,11 +11,24 @@ export function EditorPane({
   onCreateNote,
   onTitleChange,
   onEditorChange,
-  onEditorKeyDown,
   onSlashKey,
   onContextMenu,
+  onSlashMenuKeyDown,
+  isSlashMenuOpen,
   setEditorInstance,
 }) {
+  // ✅ Refs so handlers always see latest values without triggering re-creation
+  const isSlashMenuOpenRef = useRef(isSlashMenuOpen)
+  const onSlashMenuKeyDownRef = useRef(onSlashMenuKeyDown)
+  const onSlashKeyRef = useRef(onSlashKey)
+  const onContextMenuRef = useRef(onContextMenu)
+
+  // Keep refs in sync on every render
+  useEffect(() => { isSlashMenuOpenRef.current = isSlashMenuOpen }, [isSlashMenuOpen])
+  useEffect(() => { onSlashMenuKeyDownRef.current = onSlashMenuKeyDown }, [onSlashMenuKeyDown])
+  useEffect(() => { onSlashKeyRef.current = onSlashKey }, [onSlashKey])
+  useEffect(() => { onContextMenuRef.current = onContextMenu }, [onContextMenu])
+
   const editor = useEditor(
     {
       extensions: [
@@ -28,26 +41,40 @@ export function EditorPane({
       editorProps: {
         handleDOMEvents: {
           contextmenu: (view, event) => {
-            onContextMenu(event)
+            onContextMenuRef.current(event)
             return false
           },
           keydown: (view, event) => {
-            if (event.key === '/') onSlashKey(event)
+            // ✅ Read from ref — always fresh value, no stale closure
+            if (isSlashMenuOpenRef.current) {
+              const handled = onSlashMenuKeyDownRef.current(event)
+              if (handled) return true
+            }
+
+            if (event.key === '/') {
+              // ✅ Use setTimeout so the '/' is inserted FIRST, then we read position
+              setTimeout(() => {
+                const selection = window.getSelection()
+                if (selection && selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0)
+                  const rect = range.getBoundingClientRect()
+                  onSlashKeyRef.current({ x: rect.left, y: rect.bottom })
+                }
+              }, 0)
+            }
             return false
           },
         },
         attributes: {
-          class:
-            'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none p-1',
+          class: 'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none p-1',
         },
       },
       onUpdate: ({ editor }) => onEditorChange(editor.getHTML()),
       immediatelyRender: false,
     },
-    [selectedNote?.id],
+    [selectedNote?.id], // ✅ Only re-create when note changes, NOT on menu state
   )
 
-  // Sync content when switching notes
   useEffect(() => {
     if (editor && selectedNote?.content !== undefined) {
       const current = editor.getHTML()
@@ -84,9 +111,9 @@ export function EditorPane({
     )
   }
 
-  // ✅ This is the real editor render — now correctly outside the !selectedNote guard
   return (
     <section className="flex-1 overflow-hidden px-8 py-5">
+    
       <div className="mx-auto flex h-full max-w-3xl flex-col rounded-xl border border-slate-800/80 bg-slate-950/70 px-6 py-4 shadow-soft">
         <input
           type="text"
