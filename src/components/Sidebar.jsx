@@ -14,7 +14,6 @@ export function Sidebar({
   onChangeTab,
   folders,
   notes,
-  search,
   selectedFolderId,
   onSelectFolder,
   selectedNoteId,
@@ -30,12 +29,10 @@ export function Sidebar({
   onToggleFolderOpen,
 }) {
 
-  const displayNotes = notes
-  .filter((n) => activeTab === SidebarTabs.FAVORITES ? n.is_favorite : true)
-  .filter((n) => search.trim()
-    ? n.title?.toLowerCase().includes(search.toLowerCase()) ||
-      n.content?.toLowerCase().includes(search.toLowerCase())
-    : true
+
+
+    const displayNotes = notes.filter((n) =>
+    activeTab === SidebarTabs.FAVORITES ? n.is_favorite : true
   )
   return (
     <aside className="flex w-72 flex-col border-r border-slate-800 bg-black/40 backdrop-blur-xl">
