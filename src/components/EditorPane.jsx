@@ -44,26 +44,37 @@ export function EditorPane({
             onContextMenuRef.current(event)
             return false
           },
-          keydown: (view, event) => {
-            // ✅ Read from ref — always fresh value, no stale closure
-            if (isSlashMenuOpenRef.current) {
-              const handled = onSlashMenuKeyDownRef.current(event)
-              if (handled) return true
-            }
+ keydown: (view, event) => {
+  if (isSlashMenuOpenRef.current) {
+    const handled = onSlashMenuKeyDownRef.current(event)
+    if (handled) return true
 
-            if (event.key === '/') {
-              // ✅ Use setTimeout so the '/' is inserted FIRST, then we read position
-              setTimeout(() => {
-                const selection = window.getSelection()
-                if (selection && selection.rangeCount > 0) {
-                  const range = selection.getRangeAt(0)
-                  const rect = range.getBoundingClientRect()
-                  onSlashKeyRef.current({ x: rect.left, y: rect.bottom })
-                }
-              }, 0)
-            }
-            return false
-          },
+    // ✅ Close menu on Backspace — check using saved slash position
+    if (event.key === 'Backspace') {
+      // Any backspace while menu is open should close it
+      // because user is editing before/at the slash
+      onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
+    }
+
+    // ✅ Also close if user types any letter key (they're filtering, not in menu)
+    // Remove this if you want typing to filter the menu instead
+    if (event.key.length === 1 && event.key !== '/') {
+      onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
+    }
+  }
+
+  if (event.key === '/') {
+    setTimeout(() => {
+      const selection = window.getSelection()
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0)
+        const rect = range.getBoundingClientRect()
+        onSlashKeyRef.current({ x: rect.left, y: rect.bottom })
+      }
+    }, 0)
+  }
+  return false
+},
         },
         attributes: {
           class: 'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none p-1',
