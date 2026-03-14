@@ -122,25 +122,24 @@ export function EditorPane({
     )
   }
 
-  return (
-    <section className="flex-1 overflow-hidden px-8 py-5">
-    
-      <div className="mx-auto flex h-full max-w-3xl flex-col rounded-xl border border-slate-800/80 bg-slate-950/70 px-6 py-4 shadow-soft">
-        <input
-          type="text"
-          value={selectedNote.title || ''}
-          onChange={onTitleChange}
-          className="mb-1 w-full bg-transparent text-xl font-semibold text-slate-50 placeholder:text-slate-500 focus:outline-none"
-          placeholder="Untitled"
-        />
-        <p className="mb-3 text-xs text-slate-500">
-          Last edited{' '}
-          {selectedNote.updated_at
-            ? new Date(selectedNote.updated_at).toLocaleString()
-            : 'just now'}
-        </p>
-        <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
-      </div>
-    </section>
-  )
+return (
+  <section className="flex-1 overflow-hidden">
+    <div className="flex h-full flex-col bg-[#0f0f0f] px-12 py-6">
+      <input
+        type="text"
+        value={selectedNote.title || ''}
+        onChange={onTitleChange}
+        className="mb-1 w-full bg-transparent text-2xl font-semibold text-slate-50 placeholder:text-slate-600 focus:outline-none"
+        placeholder="Untitled"
+      />
+      <p className="mb-4 text-xs text-slate-600">
+        Last edited{' '}
+        {selectedNote.updated_at
+          ? new Date(selectedNote.updated_at).toLocaleString()
+          : 'just now'}
+      </p>
+      <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
+    </div>
+  </section>
+)
 }
