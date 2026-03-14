@@ -5,6 +5,6 @@ import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <App className="flex min-h-screen bg-[#0f0f0f] text-slate-100" />
   </StrictMode>,
 )
