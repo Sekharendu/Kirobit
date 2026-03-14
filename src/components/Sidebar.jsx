@@ -35,7 +35,7 @@ export function Sidebar({
     activeTab === SidebarTabs.FAVORITES ? n.is_favorite : true
   )
   return (
-    <aside className="flex w-72 flex-col border-r border-slate-800 bg-black/40 backdrop-blur-xl">
+    <aside className="flex w-72 flex-col border-r border-[#1f1f1f] bg-[#111111]">
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-xs font-semibold">
