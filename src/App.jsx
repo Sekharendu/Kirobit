@@ -115,7 +115,12 @@ function App() {
   }
 
   const handleSlashKey = useCallback((cursorCoords) => {
-    if (editor) slashInsertPosRef.current = editor.state.selection.from
+    if (editor) {
+      // ✅ Read position AFTER setTimeout so '/' is already inserted
+      // editor.state.selection.from is now pointing AFTER the '/'
+      // so the '/' is at from - 1
+      slashInsertPosRef.current = editor.state.selection.from - 1
+    }
     setSlashMenuIndex(0)
     setMenu({ x: cursorCoords.x, y: cursorCoords.y, type: 'slash' })
     setTimeout(() => {
@@ -308,12 +313,13 @@ function App() {
 
   // ── Render ────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-[#0f0f0f] text-slate-100">
-      <div className="flex w-full" onClick={clearMenus}>
+<div className="flex h-screen overflow-hidden bg-[#0f0f0f] text-slate-100">
+  <div className="flex w-full h-full" onClick={clearMenus}>
         <Sidebar
           activeTab={activeTab}
           onChangeTab={setActiveTab}
           folders={folders}
+          user={user}
           notes={notes}
           search={search}
           selectedFolderId={selectedFolderId}
@@ -331,7 +337,7 @@ function App() {
           onToggleFolderOpen={handleToggleFolderOpen}
         />
 
-        <main className="flex flex-1 flex-col bg-[#0f0f0f]">
+<main className="flex flex-1 flex-col bg-[#0f0f0f] min-h-0 overflow-hidden">
           <TopBar
             notes={notes}
             search={search}

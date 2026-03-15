@@ -17,7 +17,6 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
       })
     : []
 
-  // Close search dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
@@ -28,7 +27,6 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Close user menu on outside click
   useEffect(() => {
     const handler = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -39,27 +37,28 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Get avatar URL from either Google or GitHub
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
-
+  console.log('This is the user:', user);
   return (
-    <header className="flex items-center gap-3 border-b border-[#1f1f1f] bg-[#111111] px-5 py-3">
+    <header className="flex items-center gap-3 border-b border-[#1f1f1f] bg-[#111111] px-5 py-3 flex-shrink-0">
 
       {/* Search */}
       <div className="relative flex-1" ref={searchRef}>
-        <div className="flex items-center gap-2 rounded-md bg-slate-900/80 px-3 py-1.5">
-          <span className="text-xs text-slate-500">🔍</span>
+        <div className="flex items-center gap-2 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1.5">
+          <span className="text-xs" style={{ color: '#444444' }}>🔍</span>
           <input
             value={search}
             onChange={(e) => { onChangeSearch(e.target.value); setIsSearchOpen(true) }}
             onFocus={() => search.trim() && setIsSearchOpen(true)}
             placeholder="Search by title or content"
-            className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+            className="w-full bg-transparent text-sm focus:outline-none"
+            style={{ color: '#c9c9c9' }}
           />
           {search && (
             <button
               onClick={() => { onChangeSearch(''); setIsSearchOpen(false) }}
-              className="text-slate-500 hover:text-slate-300 text-xs"
+              className="text-xs transition-colors"
+              style={{ color: '#555555' }}
             >
               ✕
             </button>
@@ -68,11 +67,13 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
 
         {/* Search dropdown */}
         {isSearchOpen && search.trim() && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden">
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] shadow-2xl overflow-hidden">
             {filteredNotes.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-slate-500 text-center">No results found</p>
+              <p className="px-4 py-3 text-sm text-center" style={{ color: '#555555' }}>
+                No results found
+              </p>
             ) : (
-              <ul className="max-h-[224px] overflow-y-auto divide-y divide-slate-800">
+              <ul className="max-h-[224px] overflow-y-auto divide-y divide-[#2a2a2a]">
                 {filteredNotes.map((note) => (
                   <li
                     key={note.id}
@@ -81,12 +82,15 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
                       onChangeSearch('')
                       setIsSearchOpen(false)
                     }}
-                    className="flex cursor-pointer flex-col gap-0.5 px-4 py-3 hover:bg-slate-800 transition-colors"
+                    className="flex cursor-pointer flex-col gap-0.5 px-4 py-3 transition-colors"
+                    style={{ color: '#c9c9c9' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#232323'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
-                    <span className="text-sm font-medium text-slate-100 truncate">
+                    <span className="text-sm font-medium truncate" style={{ color: '#e0e0e0' }}>
                       {note.title || 'Untitled'}
                     </span>
-                    <span className="text-xs text-slate-500 truncate">
+                    <span className="text-xs truncate" style={{ color: '#555555' }}>
                       {note.content?.replace(/<[^>]*>/g, '').slice(0, 60)}...
                     </span>
                   </li>
@@ -97,7 +101,7 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
         )}
       </div>
 
-      {/* Avatar + logout menu */}
+      {/* Avatar */}
       <div className="relative flex-shrink-0" ref={userMenuRef}>
         <button
           onClick={() => setIsUserMenuOpen(prev => !prev)}
@@ -107,29 +111,40 @@ export function TopBar({ notes, search, onChangeSearch, onSelectNote, selectedNo
             <img
               src={avatarUrl}
               alt="Profile"
-              className="h-8 w-8 rounded-full border-2 border-indigo-500 object-cover"
+              referrerPolicy="no-referrer"
+              className="h-8 w-8 rounded-full object-cover"
+              style={{ border: '2px solid #3a3a3a' }}
             />
           ) : (
-            // Fallback if no avatar
-            <div className="h-8 w-8 rounded-full border-2 border-indigo-500 bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white">
+            <div
+              className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+              style={{ background: '#2a2a2a', border: '2px solid #3a3a3a' }}
+            >
               {user?.email?.[0]?.toUpperCase() ?? '?'}
             </div>
           )}
         </button>
 
-        {/* Logout dropdown */}
+        {/* User dropdown */}
         {isUserMenuOpen && (
-          <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-lg border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden">
-            {/* User info header */}
-            <div className="px-3 py-2 border-b border-slate-800">
-              <p className="text-xs font-medium text-slate-200 truncate">
+          <div
+            className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg shadow-2xl overflow-hidden"
+            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+          >
+            <div className="px-3 py-2" style={{ borderBottom: '1px solid #2a2a2a' }}>
+              <p className="text-xs font-medium truncate" style={{ color: '#e0e0e0' }}>
                 {user?.user_metadata?.full_name || user?.user_metadata?.user_name || 'User'}
               </p>
-              <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+              <p className="text-[11px] truncate" style={{ color: '#555555' }}>
+                {user?.email}
+              </p>
             </div>
             <button
               onClick={() => { onLogout(); setIsUserMenuOpen(false) }}
-              className="w-full px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800 transition-colors"
+              className="w-full px-3 py-2 text-left text-sm transition-colors"
+              style={{ color: '#f87171' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#232323'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               Log out
             </button>

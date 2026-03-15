@@ -17,13 +17,11 @@ export function EditorPane({
   isSlashMenuOpen,
   setEditorInstance,
 }) {
-  // ✅ Refs so handlers always see latest values without triggering re-creation
   const isSlashMenuOpenRef = useRef(isSlashMenuOpen)
   const onSlashMenuKeyDownRef = useRef(onSlashMenuKeyDown)
   const onSlashKeyRef = useRef(onSlashKey)
   const onContextMenuRef = useRef(onContextMenu)
 
-  // Keep refs in sync on every render
   useEffect(() => { isSlashMenuOpenRef.current = isSlashMenuOpen }, [isSlashMenuOpen])
   useEffect(() => { onSlashMenuKeyDownRef.current = onSlashMenuKeyDown }, [onSlashMenuKeyDown])
   useEffect(() => { onSlashKeyRef.current = onSlashKey }, [onSlashKey])
@@ -44,46 +42,43 @@ export function EditorPane({
             onContextMenuRef.current(event)
             return false
           },
- keydown: (view, event) => {
-  if (isSlashMenuOpenRef.current) {
-    const handled = onSlashMenuKeyDownRef.current(event)
-    if (handled) return true
-
-    // ✅ Close menu on Backspace — check using saved slash position
-    if (event.key === 'Backspace') {
-      // Any backspace while menu is open should close it
-      // because user is editing before/at the slash
-      onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
+          keydown: (view, event) => {
+            if (isSlashMenuOpenRef.current) {
+              const handled = onSlashMenuKeyDownRef.current(event)
+              if (handled) return true
+              if (event.key === 'Backspace') {
+                onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
+              }
+              if (event.key.length === 1 && event.key !== '/') {
+                onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
+              }
+            }
+if (event.key === '/') {
+  setTimeout(() => {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      const rect = range.getBoundingClientRect()
+      // ✅ Pass cursor position FROM editor state AFTER '/' is inserted
+      onSlashKeyRef.current({ 
+        x: rect.left, 
+        y: rect.bottom,
+        editorPos: null // will be set in App via editor.state
+      })
     }
-
-    // ✅ Also close if user types any letter key (they're filtering, not in menu)
-    // Remove this if you want typing to filter the menu instead
-    if (event.key.length === 1 && event.key !== '/') {
-      onSlashMenuKeyDownRef.current({ key: 'Escape', preventDefault: () => {} })
-    }
-  }
-
-  if (event.key === '/') {
-    setTimeout(() => {
-      const selection = window.getSelection()
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0)
-        const rect = range.getBoundingClientRect()
-        onSlashKeyRef.current({ x: rect.left, y: rect.bottom })
-      }
-    }, 0)
-  }
-  return false
-},
+  }, 0)
+}
+            return false
+          },
         },
         attributes: {
-          class: 'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent text-sm leading-relaxed text-slate-100 focus:outline-none p-1',
+          class: 'tiptap scroll-thin min-h-[200px] w-full flex-1 overflow-y-auto border-0 bg-transparent focus:outline-none p-1',
         },
       },
       onUpdate: ({ editor }) => onEditorChange(editor.getHTML()),
       immediatelyRender: false,
     },
-    [selectedNote?.id], // ✅ Only re-create when note changes, NOT on menu state
+    [selectedNote?.id],
   )
 
   useEffect(() => {
@@ -97,49 +92,60 @@ export function EditorPane({
 
   if (loading) {
     return (
-      <section className="flex-1 overflow-hidden px-8 py-5">
-        <div className="flex h-full items-center justify-center text-sm text-slate-400">
-          Loading notes…
-        </div>
+      <section className="flex-1 min-h-0 flex items-center justify-center">
+        <p className="text-sm" style={{ color: '#555555' }}>Loading notes…</p>
       </section>
     )
   }
 
   if (!selectedNote) {
     return (
-      <section className="flex-1 overflow-hidden px-8 py-5">
-        <div className="flex h-full flex-col items-center justify-center text-sm text-slate-500">
-          <p>No notes yet.</p>
-          <button
-            type="button"
-            onClick={onCreateNote}
-            className="mt-3 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
-          >
-            Create your first note
-          </button>
-        </div>
+      <section className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3">
+        <p className="text-sm" style={{ color: '#555555' }}>No notes yet.</p>
+        <button
+          type="button"
+          onClick={onCreateNote}
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
+          style={{ background: '#3730a3' }}
+        >
+          Create your first note
+        </button>
       </section>
     )
   }
 
-return (
-  <section className="flex-1 overflow-hidden">
-    <div className="flex h-full flex-col bg-[#0f0f0f] px-12 py-6">
-      <input
-        type="text"
-        value={selectedNote.title || ''}
-        onChange={onTitleChange}
-        className="mb-1 w-full bg-transparent text-2xl font-semibold text-slate-50 placeholder:text-slate-600 focus:outline-none"
-        placeholder="Untitled"
-      />
-      <p className="mb-4 text-xs text-slate-600">
-        Last edited{' '}
-        {selectedNote.updated_at
-          ? new Date(selectedNote.updated_at).toLocaleString()
-          : 'just now'}
-      </p>
-      <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
-    </div>
-  </section>
-)
+  return (
+    <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
+      <div
+        className="flex flex-col flex-1 min-h-0 px-16 py-8"
+        style={{ background: '#0f0f0f' }}
+      >
+        {/* Title */}
+        <input
+          type="text"
+          value={selectedNote.title || ''}
+          onChange={onTitleChange}
+          className="mb-1 w-full bg-transparent text-3xl font-bold tracking-tight focus:outline-none"
+          style={{
+            background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+          placeholder="Untitled"
+        />
+
+        {/* Last edited */}
+        <p className="mb-6 text-xs" style={{ color: '#3a3a3a' }}>
+          Last edited{' '}
+          {selectedNote.updated_at
+            ? new Date(selectedNote.updated_at).toLocaleString()
+            : 'just now'}
+        </p>
+
+        {/* Editor */}
+        <EditorContent editor={editor} className="flex-1 overflow-y-auto scroll-thin" />
+      </div>
+    </section>
+  )
 }
