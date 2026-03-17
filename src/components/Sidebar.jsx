@@ -1,4 +1,6 @@
 import PropTypes from 'prop-types'
+import { List, Star, Plus, FileText, FolderPlus, ChevronRight, ChevronDown, Folder } from 'lucide-react'
+
 
 function classNames(...values) {
   return values.filter(Boolean).join(' ')
@@ -58,7 +60,7 @@ return (
       <button
         type="button"
         className={classNames(
-          'flex h-8 w-8 items-center justify-center rounded-md text-[#555555] hover:bg-[#1e1e1e] hover:text-[#c0c0c0] transition-colors',
+          'flex h-8 w-8 items-center justify-center rounded-md text-[#555555]  hover:text-[#c0c0c0] transition-colors',
           activeTab === SidebarTabs.ALL && 'bg-[#1e1e1e] text-[#e0e0e0]',
         )}
         onClick={(e) => {
@@ -67,12 +69,12 @@ return (
           onSelectFolder(null)
         }}
       >
-        <span className="text-lg">☰</span>
+        <List size={16} />
       </button>
       <button
         type="button"
         className={classNames(
-          'flex h-8 w-8 items-center justify-center rounded-md text-[#555555] hover:bg-[#1e1e1e] hover:text-[#c0c0c0] transition-colors',
+          'flex h-8 w-8 items-center justify-center rounded-md text-[#555555]  hover:text-[#c0c0c0] transition-colors',
           activeTab === SidebarTabs.FAVORITES && 'bg-[#1e1e1e] text-yellow-400',
         )}
         onClick={(e) => {
@@ -81,31 +83,32 @@ return (
           onSelectFolder(null)
         }}
       >
-        <span className="text-lg">★</span>
+        <Star size={16} fill={activeTab === SidebarTabs.FAVORITES ? '#eab308' : 'none'} />
       </button>
       <button
         type="button"
-        className="ml-auto flex h-8 w-8 items-center justify-center rounded-md bg-[#1e1e1e] text-[#8a8a8a] hover:bg-[#2a2a2a] hover:text-[#e0e0e0] transition-colors"
+        className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-[#8a8a8a]  hover:text-[#e0e0e0] transition-colors"
         onClick={(e) => {
           e.stopPropagation()
           onCreateNote()
         }}
       >
-        +
+        <Plus size={16} />
       </button>
       <button
         type="button"
-        className="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-[#2a2a2a] text-[#555555] hover:border-[#3a3a3a] hover:text-[#c0c0c0] transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded-md  border-[#2a2a2a] text-[#555555] hover:border-[#3a3a3a] hover:text-[#c0c0c0] transition-colors"
         onClick={(e) => {
           e.stopPropagation()
           onCreateFolder()
         }}
       >
-        📁
+        <FolderPlus size={16} />
+
       </button>
     </div>
 
-    {/* Scrollable list */}
+    {/* Scrollable List */}
     <div
       className="scroll-thin flex-1 overflow-y-auto px-2 py-2"
       onClick={(e) => e.stopPropagation()}
@@ -115,8 +118,8 @@ return (
         <div key={folder.id} className="mb-0.5">
           {editingItem && editingItem.kind === 'folder' && editingItem.id === folder.id ? (
             <div className="flex items-center rounded-md px-2 py-1.5 text-xs text-[#8a8a8a]">
-              <span className="mr-1 text-[10px] text-[#444444]">▾</span>
-              <span className="mr-2">📁</span>
+              <ChevronDown size={10} className="mr-1 flex-shrink-0" style={{ color: '#444444' }} />
+              <Folder size={10} className="mr-2 flex-shrink-0" style={{ color: '#eab308' }} />
               <input
                 autoFocus
                 value={editingItem.tempName}
@@ -147,7 +150,7 @@ return (
                 <span className="text-[10px] text-[#444444]">
                   {openFolders.includes(folder.id) ? '▾' : '▸'}
                 </span>
-                <span className="ml-1">📁</span>
+                <Folder size={13} className="flex-shrink-0" style={{ color: '#eab308' }} />
                 <span className="truncate">{folder.name || 'New Folder'}</span>
               </span>
             </button>
@@ -179,13 +182,19 @@ return (
                     onClick={(e) => { e.stopPropagation(); onSelectNote(note.id) }}
                     onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                     className={classNames(
-                      'ml-7 mt-0.5 flex w-[calc(100%-1.75rem)] items-center justify-between rounded-md px-2 py-1 text-left text-[11px] text-[#7a7a7a] hover:bg-[#1a1a1a] hover:text-[#c0c0c0] transition-colors',
+                      'ml-7 mt-0.5 flex w-[calc(100%-1.75rem)] items-center gap-1.5 rounded-md px-2 py-1 text-left text-[11px] text-[#7a7a7a] hover:bg-[#1a1a1a] hover:text-[#c0c0c0] transition-colors',
                       selectedNoteId === note.id && 'bg-[#1e1e1e] text-[#e0e0e0]',
                     )}
                   >
-                    <span className="truncate">{note.title || 'Untitled'}</span>
-                    {note.is_favorite && <span className="ml-1 text-[10px] text-yellow-500">★</span>}
-                  </button>
+                    {/* ✅ File icon */}
+                    <FileText size={11} className="flex-shrink-0" style={{ color: '#555555' }} />
+                    {/* ✅ Title takes remaining space */}
+                    <span className="flex-1 truncate">{note.title || 'Untitled'}</span>
+                    {/* ✅ Favorite star at the end */}
+                    {note.is_favorite && (
+                      <Star size={10} fill='#eab308' color='#eab308' className="flex-shrink-0" />
+                    )}
+                </button>
                 )
               ))
           }
@@ -218,12 +227,18 @@ return (
                 onClick={(e) => { e.stopPropagation(); onSelectNote(note.id) }}
                 onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                 className={classNames(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-[#7a7a7a] hover:bg-[#1a1a1a] hover:text-[#c0c0c0] transition-colors',
+                  'flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-[#7a7a7a] hover:bg-[#1a1a1a] hover:text-[#c0c0c0] transition-colors',
                   selectedNoteId === note.id && 'bg-[#1e1e1e] text-[#e0e0e0]',
                 )}
               >
-                <span className="truncate">{note.title || 'Untitled'}</span>
-                {note.is_favorite && <span className="ml-1 text-[10px] text-yellow-500">★</span>}
+                {/* ✅ File icon */}
+                <FileText size={12} className="flex-shrink-0" style={{ color: '#555555' }} />
+                {/* ✅ Title takes remaining space */}
+                <span className="flex-1 truncate">{note.title || 'Untitled'}</span>
+                {/* ✅ Favorite star at the end */}
+                {note.is_favorite && (
+                  <Star size={10} fill='#eab308' color='#eab308' className="flex-shrink-0" />
+                )}
               </button>
             )
           ))
