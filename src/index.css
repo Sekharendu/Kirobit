@@ -8,14 +8,21 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
-  margin: 0;
-  background: #dfd4d4;
+  height: 100%;
+  overflow: hidden;
+  background: #1a1a1a;
   color: #c9c9c9;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 
 #root {
   height: 100vh;

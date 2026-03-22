@@ -156,8 +156,8 @@ export function EditorPane({
 return (
     <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
       <div
-        className="flex flex-col flex-1 min-h-0 px-16 py-8"
-        style={{ background: '#0f0f0f' }}
+        className="flex flex-col flex-1 min-h-0"
+        style={{ background: '#1a1a1a', padding: 'clamp(16px, 4vw, 64px)' }}
       >
         {/* ✅ Header row — title + icons */}
         <div className="flex items-start justify-between mb-1 gap-4">
@@ -165,8 +165,9 @@ return (
             type="text"
             value={selectedNote.title || ''}
             onChange={onTitleChange}
-            className="flex-1 bg-transparent text-3xl font-bold tracking-tight focus:outline-none"
+            className="flex-1 bg-transparent min-w-0 font-bold tracking-tight focus:outline-none"
             style={{
+              fontSize: 'clamp(1.25rem, 4vw, 1.875rem)',
               background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -176,7 +177,7 @@ return (
           />
 
           {/* ✅ Action icons */}
-          <div className="flex items-center gap-1 pt-2 flex-shrink-0">
+          <div className="flex items-center gap-1 pt-1 flex-shrink-0">
             {/* Favorite toggle */}
             <button
               type="button"
