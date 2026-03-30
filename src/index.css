@@ -29,8 +29,12 @@ body {
   overflow: hidden;
 }
 
-/* ── Scrollbar ─────────────────────────────────────────── */
-.scroll-thin::-webkit-scrollbar { width: 4px; }
+/* ── Scrollbar (WebKit + Firefox) — matches editor pane feel ── */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
+.scroll-thin::-webkit-scrollbar { width: 4px; height: 4px; }
 .scroll-thin::-webkit-scrollbar-track { background: transparent; }
 .scroll-thin::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 .scroll-thin::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
@@ -45,6 +49,75 @@ body {
   color: #c9c9c9;
 }
 .menu-btn:hover { background-color: #2a2a2a; }
+
+/* ── Format menu (/) + right-click — emerald headers; neutral rows; emerald only when selected ── */
+.format-menu-popover .format-menu-header-title {
+  color: #34d399;
+}
+.format-menu-popover .format-menu-section-title {
+  color: #10b981;
+}
+.format-menu-popover button.format-menu-option {
+  outline: none;
+}
+.format-menu-popover button.format-menu-option:focus-visible {
+  outline: 2px solid #6b7280;
+  outline-offset: 2px;
+}
+/* Hover: same neutral lift as sidebar note rows (not selected) */
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover {
+  background-color: #262626 !important;
+  color: #d1d5db !important;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover .format-menu-icon {
+  color: #a8a29e !important;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover .format-menu-label--highlight {
+  color: #fcd34d !important;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover .format-menu-icon--highlight {
+  color: #fbbf24 !important;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover.format-menu-option--danger .format-menu-label,
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected):hover.format-menu-option--danger .format-menu-icon {
+  color: #f87171 !important;
+}
+/* Keyboard / active row: same as selected sidebar note (#2a2a2a), not green */
+.format-menu-popover button.format-menu-option--selected {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+.format-menu-popover button.format-menu-option--selected:hover {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+.format-menu-popover button.format-menu-option--selected .format-menu-label {
+  color: #ffffff !important;
+}
+.format-menu-popover .format-menu-icon {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #a8a29e;
+}
+.format-menu-popover button.format-menu-option--selected .format-menu-icon:not(.format-menu-icon--highlight) {
+  color: #e5e7eb !important;
+}
+.format-menu-popover button.format-menu-option--selected .format-menu-icon--highlight {
+  color: #ffffff !important;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected) .format-menu-label--highlight {
+  color: #fcd34d;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected) .format-menu-icon--highlight {
+  color: #fbbf24;
+}
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected).format-menu-option--danger .format-menu-label,
+.format-menu-popover button.format-menu-option:not(.format-menu-option--selected).format-menu-option--danger .format-menu-icon {
+  color: #ef4444;
+}
 
 /* ── TipTap Editor Typography ──────────────────────────── */
 .tiptap { outline: none; }
@@ -120,8 +193,7 @@ body {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.875em;
   background: #1e1e1e;
-  /* color: #a8d8a8; */
-  color: rgb(237, 237, 138);
+  color: #10b981;
   padding: 0.15em 0.4em;
   border-radius: 4px;
 }
@@ -138,8 +210,18 @@ body {
 .tiptap pre code {
   background: transparent;
   padding: 0;
-  /* color: #a8d8a8; */
-  color: rgb(237, 237, 138);
+  color: #10b981;
+}
+
+/* Code block with toolbar (React node view) */
+.tiptap .code-block-with-toolbar__pre .code-block-with-toolbar__code {
+  display: block;
+  width: 100%;
+  background: transparent;
+  padding: 0;
+  color: #10b981;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.875em;
 }
 
 .tiptap blockquote {
