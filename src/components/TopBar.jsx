@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, X, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { Search, X, PanelLeftClose, PanelLeft, ChevronLeft, Star, Trash2 } from 'lucide-react'
 import PropTypes from 'prop-types'
 
 export function TopBar({
@@ -11,6 +11,11 @@ export function TopBar({
   onLogout,
   sidebarOpen,
   onToggleSidebar,
+  isMobile = false,
+  onMobileBack,
+  selectedNote,
+  onToggleFavorite,
+  onDeleteNote,
 }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -69,24 +74,35 @@ export function TopBar({
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 bg-[#1a1a1a] px-4 pl-3 flex-shrink-0">
-      {/* Sidebar toggle — bottom border is a single full-width line from App */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          onToggleSidebar()
-        }}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-[#262626]"
-        style={{ color: '#9ca3af' }}
-        aria-expanded={sidebarOpen}
-        aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-      >
-        {sidebarOpen ? <PanelLeftClose size={20} strokeWidth={1.75} /> : <PanelLeft size={20} strokeWidth={1.75} />}
-      </button>
+      {/* Sidebar toggle (desktop) / Back button (mobile) */}
+      {isMobile ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMobileBack?.() }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-[#262626]"
+          style={{ color: '#9ca3af' }}
+          aria-label="Back to notes"
+          title="Back to notes"
+        >
+          <ChevronLeft size={22} strokeWidth={2} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onToggleSidebar() }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-[#262626]"
+          style={{ color: '#9ca3af' }}
+          aria-expanded={sidebarOpen}
+          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+        >
+          {sidebarOpen ? <PanelLeftClose size={20} strokeWidth={1.75} /> : <PanelLeft size={20} strokeWidth={1.75} />}
+        </button>
+      )}
 
-      {/* Search — ~65% width (35% narrower than full middle), centered */}
-      <div className="relative flex min-w-0 flex-1 justify-center">
+      {/* Spacer on mobile, search on desktop */}
+      {isMobile && <div className="flex-1" />}
+      <div className={`relative flex min-w-0 flex-1 justify-center${isMobile ? ' hidden' : ''}`}>
         <div className="relative w-[65%] min-w-0 max-w-full" ref={searchRef}>
           <div
             className={
@@ -153,59 +169,83 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Avatar */}
-      <div className="relative flex-shrink-0" ref={userMenuRef}>
-        <button
-          onClick={() => setIsUserMenuOpen(prev => !prev)}
-          className="flex items-center justify-center rounded-full focus:outline-none"
-        >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Profile"
-              referrerPolicy="no-referrer"
-              className="h-8 w-8 rounded-full object-cover"
-              style={{ border: '2px solid #3a3a3a' }}
-            />
-          ) : (
-            <div
-              className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-              style={{ background: '#2a2a2a', border: '2px solid #3a3a3a' }}
+      {/* Mobile: star + trash actions | Desktop: avatar */}
+      {isMobile ? (
+        selectedNote && (
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => onToggleFavorite?.(selectedNote)}
+              className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
+              style={{ color: selectedNote.is_favorite ? '#eab308' : '#555555' }}
+              title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
             >
-              {user?.email?.[0]?.toUpperCase() ?? '?'}
+              <Star size={18} fill={selectedNote.is_favorite ? '#eab308' : 'none'} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeleteNote?.(selectedNote.id)}
+              className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
+              style={{ color: '#555555' }}
+              title="Delete note"
+            >
+              <Trash2 size={18} strokeWidth={1.75} />
+            </button>
+          </div>
+        )
+      ) : (
+        <div className="relative flex-shrink-0" ref={userMenuRef}>
+          <button
+            onClick={() => setIsUserMenuOpen(prev => !prev)}
+            className="flex items-center justify-center rounded-full focus:outline-none"
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 rounded-full object-cover"
+                style={{ border: '2px solid #3a3a3a' }}
+              />
+            ) : (
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+                style={{ background: '#2a2a2a', border: '2px solid #3a3a3a' }}
+              >
+                {user?.email?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
+          </button>
+
+          {isUserMenuOpen && (
+            <div
+              className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg shadow-2xl overflow-hidden"
+              style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            >
+              <div className="px-3 py-2" style={{ borderBottom: '1px solid #2a2a2a' }}>
+                <p className="text-xs font-medium truncate" style={{ color: '#e0e0e0' }}>
+                  {user?.user_metadata?.full_name
+                    || user?.user_metadata?.user_name
+                    || user?.user_metadata?.name
+                    || 'User'}
+                </p>
+                <p className="text-[11px] truncate" style={{ color: '#555555' }}>
+                  {user?.email}
+                </p>
+              </div>
+              <button
+                onClick={() => { onLogout(); setIsUserMenuOpen(false) }}
+                className="w-full px-3 py-2 text-left text-sm transition-colors"
+                style={{ color: '#f87171' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#232323'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                Log out
+              </button>
             </div>
           )}
-        </button>
-
-      {isUserMenuOpen && (
-        <div
-          className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg shadow-2xl overflow-hidden"
-          style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-        >
-          <div className="px-3 py-2" style={{ borderBottom: '1px solid #2a2a2a' }}>
-            <p className="text-xs font-medium truncate" style={{ color: '#e0e0e0' }}>
-              {/* ✅ covers both Google and GitHub */}
-              {user?.user_metadata?.full_name
-                || user?.user_metadata?.user_name
-                || user?.user_metadata?.name
-                || 'User'}
-            </p>
-            <p className="text-[11px] truncate" style={{ color: '#555555' }}>
-              {user?.email}
-            </p>
-          </div>
-          <button
-            onClick={() => { onLogout(); setIsUserMenuOpen(false) }}
-            className="w-full px-3 py-2 text-left text-sm transition-colors"
-            style={{ color: '#f87171' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#232323'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-          >
-            Log out
-          </button>
         </div>
       )}
-      </div>
     </header>
   )
 }
@@ -219,4 +259,9 @@ TopBar.propTypes = {
   onLogout: PropTypes.func.isRequired,
   sidebarOpen: PropTypes.bool.isRequired,
   onToggleSidebar: PropTypes.func.isRequired,
+  isMobile: PropTypes.bool,
+  onMobileBack: PropTypes.func,
+  selectedNote: PropTypes.object,
+  onToggleFavorite: PropTypes.func,
+  onDeleteNote: PropTypes.func,
 }
