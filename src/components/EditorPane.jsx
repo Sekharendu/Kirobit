@@ -17,9 +17,10 @@ export function EditorPane({
   onContextMenu,
   onFormatMenuKeyDown,
   isFormatMenuOpen,
-  onToggleFavorite,   // ✅ new prop
+  onToggleFavorite,
   onDeleteNote,
   setEditorInstance,
+  isMobile = false,
 }) {
   const isFormatMenuOpenRef = useRef(isFormatMenuOpen)
   const onFormatMenuKeyDownRef = useRef(onFormatMenuKeyDown)
@@ -164,7 +165,7 @@ return (
         className="flex flex-col flex-1 min-h-0"
         style={{
           background: '#1a1a1a',
-          padding: 'clamp(10px, 2.4vw, 38px)',
+          padding: isMobile ? '10px 16px' : 'clamp(10px, 2.4vw, 38px)',
         }}
       >
         {/* Header row — title + icons (~40% tighter spacing vs prior) */}
@@ -184,50 +185,45 @@ return (
             placeholder="Untitled"
           />
 
-          {/* ✅ Action icons */}
-          <div className="flex items-center gap-1 pt-0.5 flex-shrink-0">
-            {/* Favorite toggle */}
-            <button
-              type="button"
-              onClick={() => onToggleFavorite(selectedNote)}
-              className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
-              style={{ color: selectedNote.is_favorite ? '#eab308' : '#444444' }}
-              onMouseEnter={(e) => {
-                if (!selectedNote.is_favorite) e.currentTarget.style.color = '#888888'
-                e.currentTarget.style.background = '#1a1a1a'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = selectedNote.is_favorite ? '#eab308' : '#444444'
-                e.currentTarget.style.background = 'transparent'
-              }}
-              title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
-            >
-              <Star
-                size={18}
-                fill={selectedNote.is_favorite ? '#eab308' : 'none'}
-                strokeWidth={1.75}
-              />
-            </button>
-
-            {/* Delete note */}
-            <button
-              type="button"
-              onClick={() => onDeleteNote(selectedNote.id)}
-              className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
-              style={{ color: '#444444' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#f87171'
-                e.currentTarget.style.background = '#1a1a1a'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#444444'
-                e.currentTarget.style.background = 'transparent'
-              }}
-              title="Delete note"
-            >
-              <Trash2 size={18} strokeWidth={1.75} />
-            </button>
-          </div>
+          {/* Action icons — hidden on mobile (live in TopBar instead) */}
+          {!isMobile && (
+            <div className="flex items-center gap-1 pt-0.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(selectedNote)}
+                className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
+                style={{ color: selectedNote.is_favorite ? '#eab308' : '#444444' }}
+                onMouseEnter={(e) => {
+                  if (!selectedNote.is_favorite) e.currentTarget.style.color = '#888888'
+                  e.currentTarget.style.background = '#1a1a1a'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = selectedNote.is_favorite ? '#eab308' : '#444444'
+                  e.currentTarget.style.background = 'transparent'
+                }}
+                title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
+              >
+                <Star size={18} fill={selectedNote.is_favorite ? '#eab308' : 'none'} strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onDeleteNote(selectedNote.id)}
+                className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
+                style={{ color: '#444444' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#f87171'
+                  e.currentTarget.style.background = '#1a1a1a'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#444444'
+                  e.currentTarget.style.background = 'transparent'
+                }}
+                title="Delete note"
+              >
+                <Trash2 size={18} strokeWidth={1.75} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Last edited */}
