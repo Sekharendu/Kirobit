@@ -287,7 +287,7 @@ function App() {
     setSelectedNoteId(noteId)
     setSelectedNoteIds([])
     const note = notesRef.current.find(n => n.id === noteId)
-    setSelectedFolderId(note?.folder_id || null)
+    setSelectedFolderId(isMobile ? null : (note?.folder_id || null))
     if (isMobile) setMobileView('editor')
   }, [isMobile])
 

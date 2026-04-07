@@ -47,9 +47,11 @@ export function Sidebar({
   const c = getColors(theme)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [tappedNoteId, setTappedNoteId] = useState(null)
   const searchRef = useRef(null)
   const searchInputRef = useRef(null)
   const userMenuRef = useRef(null)
+  const noteTapTimerRef = useRef(null)
 
   const [dragState, setDragState] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
@@ -144,6 +146,25 @@ export function Sidebar({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [isMobile])
+
+  useEffect(() => () => {
+    if (noteTapTimerRef.current) clearTimeout(noteTapTimerRef.current)
+  }, [])
+
+  const handleOpenNote = (noteId) => {
+    if (!isMobile) {
+      onSelectNote(noteId)
+      return
+    }
+    if (noteTapTimerRef.current) clearTimeout(noteTapTimerRef.current)
+    setTappedNoteId(noteId)
+    noteTapTimerRef.current = setTimeout(() => {
+      onSelectFolder(null)
+      onSelectNote(noteId)
+      setTappedNoteId(null)
+      noteTapTimerRef.current = null
+    }, 130)
+  }
   const displayNotes = notes.filter((n) =>
     activeTab === SidebarTabs.FAVORITES ? n.is_favorite : true
   )
@@ -455,12 +476,14 @@ export function Sidebar({
                     : {}),
                 }}
                 onMouseEnter={(e) => {
-                  if (isMobile || !(selectedFolderId === folder.id && !selectedNoteId)) {
+                  if (isMobile) return
+                  if (!(selectedFolderId === folder.id && !selectedNoteId)) {
                     e.currentTarget.style.background = c.hover
                     e.currentTarget.style.color = c.hoverText
                   }
                 }}
                 onMouseLeave={(e) => {
+                  if (isMobile) return
                   if (!isMobile && selectedFolderId === folder.id && !selectedNoteId) {
                     e.currentTarget.style.background = c.selected
                     e.currentTarget.style.color = c.selectedText
@@ -522,10 +545,14 @@ export function Sidebar({
                   <button
                     key={note.id}
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onSelectNote(note.id) }}
+                    onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); handleOpenNote(note.id) }}
                     onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                     className="ml-5 mt-0.5 flex w-[calc(100%-1.25rem)] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:scale-[0.98] active:opacity-80"
-                    style={{ color: c.text }}
+                    style={{
+                      color: c.text,
+                      transition: 'transform 0.16s ease, opacity 0.16s ease, background 0.2s ease',
+                      ...(tappedNoteId === note.id ? { transform: 'scale(0.985)', opacity: 0.88, background: c.hover } : {}),
+                    }}
                   >
                     <FileText size={18} strokeWidth={1.5} className="flex-shrink-0 mt-0.5" style={{ color: c.icon }} />
                     <div className="flex flex-col min-w-0 flex-1 gap-0.5">
@@ -649,10 +676,14 @@ export function Sidebar({
                 <button
                   key={note.id}
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onSelectNote(note.id) }}
+                  onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); handleOpenNote(note.id) }}
                   onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors active:scale-[0.98] active:opacity-80 mb-0.5"
-                  style={{ color: c.text }}
+                  style={{
+                    color: c.text,
+                    transition: 'transform 0.16s ease, opacity 0.16s ease, background 0.2s ease',
+                    ...(tappedNoteId === note.id ? { transform: 'scale(0.985)', opacity: 0.88, background: c.hover } : {}),
+                  }}
                 >
                   <FileText size={18} strokeWidth={1.5} className="flex-shrink-0 mt-0.5" style={{ color: c.icon }} />
                   <div className="flex flex-col min-w-0 flex-1 gap-0.5">
