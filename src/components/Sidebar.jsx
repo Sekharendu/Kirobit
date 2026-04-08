@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { List, Star, Plus, FileText, FolderPlus, ChevronRight, ChevronDown, Folder, Search, X, MoreHorizontal } from 'lucide-react'
+import { List, Star, Plus, FileText, FolderPlus, ChevronRight, ChevronDown, Folder, Search, X, MoreHorizontal, Sun, Moon } from 'lucide-react'
 import { KiroBitLogo } from './KiroBitLogo'
+import { getColors } from '../theme'
 
 function classNames(...values) {
   return values.filter(Boolean).join(' ')
@@ -39,7 +40,10 @@ export function Sidebar({
   search = '',
   onChangeSearch,
   onLogout,
+  theme = 'dark',
+  onToggleTheme,
 }) {
+  const c = getColors(theme)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const searchRef = useRef(null)
@@ -69,7 +73,7 @@ export function Sidebar({
 
   return (
     <aside className="flex flex-col h-full overflow-hidden"
-      style={{ background: isMobile ? '#1a1a1a' : '#222222', borderRight: isMobile ? 'none' : '1px solid #333333' }}>
+      style={{ background: isMobile ? c.sidebarMobileBg : c.sidebarBg, borderRight: isMobile ? 'none' : `1px solid ${c.border}` }}>
 
       {/* Header — on mobile acts as user menu button */}
       <div className="relative flex h-14 shrink-0 items-center justify-between px-4" ref={isMobile ? userMenuRef : undefined}>
@@ -83,12 +87,12 @@ export function Sidebar({
               <KiroBitLogo variant="minimal" size="xs" />
             </span>
             <div className="flex flex-col min-w-0 text-left">
-              <span className="text-sm font-semibold tracking-tight truncate min-w-0" style={{ color: '#ffffff' }}>
+              <span className="text-sm font-semibold tracking-tight truncate min-w-0" style={{ color: c.textHeading }}>
                 {user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'}&apos;s Notes
               </span>
-              <span className="text-[11px]" style={{ color: '#6b7280' }}>Personal workspace</span>
+              <span className="text-[11px]" style={{ color: c.textSubtle }}>Personal workspace</span>
             </div>
-            <ChevronDown size={14} strokeWidth={2} className="flex-shrink-0 ml-0.5" style={{ color: '#6b7280' }} />
+            <ChevronDown size={14} strokeWidth={2} className="flex-shrink-0 ml-0.5" style={{ color: c.textSubtle }} />
           </button>
         ) : (
           <div className="flex items-center gap-2 min-w-0">
@@ -96,10 +100,10 @@ export function Sidebar({
               <KiroBitLogo variant="minimal" size="xs" />
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold tracking-tight truncate min-w-0" style={{ color: '#ffffff' }}>
+              <span className="text-sm font-semibold tracking-tight truncate min-w-0" style={{ color: c.textHeading }}>
                 {user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'}'s Notes
               </span>
-              <span className="text-[11px]" style={{ color: '#6b7280' }}>Personal workspace</span>
+              <span className="text-[11px]" style={{ color: c.textSubtle }}>Personal workspace</span>
             </div>
           </div>
         )}
@@ -107,19 +111,29 @@ export function Sidebar({
         {isMobile && isUserMenuOpen && (
           <div
             className="absolute left-4 top-full z-50 mt-1 w-52 rounded-lg shadow-2xl overflow-hidden"
-            style={{ background: '#252525', border: '1px solid #333333' }}
+            style={{ background: c.menuBg, border: `1px solid ${c.border}` }}
           >
-            <div className="px-3 py-2.5" style={{ borderBottom: '1px solid #333333' }}>
-              <p className="text-xs font-medium truncate" style={{ color: '#e0e0e0' }}>
+            <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${c.border}` }}>
+              <p className="text-xs font-medium truncate" style={{ color: c.textBright }}>
                 {user?.user_metadata?.full_name || user?.user_metadata?.user_name || user?.user_metadata?.name || 'User'}
               </p>
-              <p className="text-[11px] truncate" style={{ color: '#555555' }}>{user?.email}</p>
+              <p className="text-[11px] truncate" style={{ color: c.textMuted }}>{user?.email}</p>
             </div>
+            <button
+              onClick={() => { onToggleTheme?.(); setIsUserMenuOpen(false) }}
+              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors"
+              style={{ color: c.text, borderBottom: `1px solid ${c.border}` }}
+              onMouseEnter={(e) => e.currentTarget.style.background = c.menuHover}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              {theme === 'dark' ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
             <button
               onClick={() => { onLogout?.(); setIsUserMenuOpen(false) }}
               className="w-full px-3 py-2.5 text-left text-sm transition-colors"
-              style={{ color: '#f87171' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#2a2a2a'}
+              style={{ color: c.danger }}
+              onMouseEnter={(e) => e.currentTarget.style.background = c.menuHover}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               Log out
@@ -128,17 +142,16 @@ export function Sidebar({
         )}
       </div>
 
-      {/* Tab bar */}
       <div className="flex items-center gap-2 px-3 py-2"
-        style={{ borderBottom: '1px solid #333333' }}>
+        style={{ borderBottom: `1px solid ${c.border}` }}>
         <button
           type="button"
-          className={classNames(
-            'flex h-8 w-8 items-center justify-center rounded-md transition-colors',
-            activeTab === SidebarTabs.ALL
-              ? 'bg-[#2a2a2a] text-white'
-              : 'text-[#6b7280] hover:bg-[#353535] hover:text-[#f3f4f6]',
-          )}
+          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+          style={activeTab === SidebarTabs.ALL
+            ? { background: c.tabActiveBg, color: c.textHeading }
+            : { color: c.iconMuted }}
+          onMouseEnter={(e) => { if (activeTab !== SidebarTabs.ALL) { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText } }}
+          onMouseLeave={(e) => { if (activeTab !== SidebarTabs.ALL) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted } }}
           onClick={(e) => { e.stopPropagation(); onChangeTab(SidebarTabs.ALL); onSelectFolder(null) }}
         >
           <List size={17} strokeWidth={1.75} />
@@ -146,21 +159,24 @@ export function Sidebar({
 
         <button
           type="button"
-          className={classNames(
-            'flex h-8 w-8 items-center justify-center rounded-md transition-colors',
-            activeTab === SidebarTabs.FAVORITES
-              ? 'bg-[#2a2a2a] text-yellow-400'
-              : 'text-[#6b7280] hover:bg-[#353535] hover:text-[#f3f4f6]',
-          )}
+          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+          style={activeTab === SidebarTabs.FAVORITES
+            ? { background: c.tabActiveBg, color: c.favorite }
+            : { color: c.iconMuted }}
+          onMouseEnter={(e) => { if (activeTab !== SidebarTabs.FAVORITES) { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText } }}
+          onMouseLeave={(e) => { if (activeTab !== SidebarTabs.FAVORITES) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted } }}
           onClick={(e) => { e.stopPropagation(); onChangeTab(SidebarTabs.FAVORITES); onSelectFolder(null) }}
           title="Favorites"
         >
-          <Star size={17} strokeWidth={1.75} fill={activeTab === SidebarTabs.FAVORITES ? '#eab308' : 'none'} />
+          <Star size={17} strokeWidth={1.75} fill={activeTab === SidebarTabs.FAVORITES ? c.favorite : 'none'} />
         </button>
 
         <button
           type="button"
-          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors text-[#9ca3af] hover:bg-[#333333] hover:text-[#d1d5db]"
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+          style={{ color: c.icon }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = c.hover; e.currentTarget.style.color = c.textBright }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.icon }}
           onClick={(e) => { e.stopPropagation(); onCreateNote() }}
           title="New note"
         >
@@ -169,7 +185,10 @@ export function Sidebar({
 
         <button
           type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors text-[#6b7280] hover:bg-[#353535] hover:text-[#f3f4f6]"
+          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+          style={{ color: c.iconMuted }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted }}
           onClick={(e) => { e.stopPropagation(); onCreateFolder() }}
           title="New folder"
         >
@@ -179,13 +198,14 @@ export function Sidebar({
 
       {/* Mobile search bar */}
       {isMobile && (
-        <div className="relative px-3 py-2" style={{ borderBottom: '1px solid #333333' }} ref={searchRef}>
-          <div className={
-            showMobileSearch
-              ? 'flex items-center gap-2 rounded-t-md rounded-b-none bg-[#1a1a1a] border border-[#333333] border-b-0 px-3 py-1.5'
-              : 'flex items-center gap-2 rounded-md bg-[#1a1a1a] border border-[#333333] px-3 py-1.5'
-          }>
-            <Search size={14} style={{ color: '#444444' }} />
+        <div className="relative px-3 py-2" style={{ borderBottom: `1px solid ${c.border}` }} ref={searchRef}>
+          <div
+            className="flex items-center gap-2 px-3 py-1.5"
+            style={showMobileSearch
+              ? { background: c.searchBg, border: `1px solid ${c.border}`, borderBottom: 'none', borderRadius: '6px 6px 0 0' }
+              : { background: c.searchBg, border: `1px solid ${c.border}`, borderRadius: '6px' }}
+          >
+            <Search size={14} style={{ color: c.iconDark }} />
             <input
               ref={searchInputRef}
               value={search}
@@ -193,35 +213,36 @@ export function Sidebar({
               onFocus={() => search.trim() && setIsSearchOpen(true)}
               placeholder="Search notes..."
               className="w-full min-w-0 bg-transparent text-sm focus:outline-none"
-              style={{ color: '#c9c9c9' }}
+              style={{ color: c.text }}
             />
             {search && (
               <button
                 onClick={() => { onChangeSearch?.(''); setIsSearchOpen(false) }}
                 className="text-xs transition-colors"
-                style={{ color: '#555555' }}
+                style={{ color: c.textMuted }}
               >
                 <X size={12} />
               </button>
             )}
           </div>
           {showMobileSearch && (
-            <div className="absolute left-3 right-3 top-full z-50 rounded-b-lg rounded-t-none border border-[#333333] border-t-0 bg-[#1e1e1e] shadow-2xl overflow-hidden">
+            <div className="absolute left-3 right-3 top-full z-50 rounded-b-lg rounded-t-none shadow-2xl overflow-hidden"
+              style={{ background: c.mobileSearchResultsBg, border: `1px solid ${c.border}`, borderTop: 'none' }}>
               {mobileFilteredNotes.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-center" style={{ color: '#555555' }}>No results found</p>
+                <p className="px-4 py-3 text-sm text-center" style={{ color: c.textMuted }}>No results found</p>
               ) : (
-                <ul className="scroll-thin max-h-[224px] overflow-y-auto divide-y divide-[#2a2a2a]">
+                <ul className="scroll-thin max-h-[224px] overflow-y-auto" style={{ borderColor: c.borderLight }}>
                   {mobileFilteredNotes.map((note) => (
                     <li
                       key={note.id}
                       onClick={() => { onSelectNote(note.id); onChangeSearch?.(''); setIsSearchOpen(false) }}
                       className="flex cursor-pointer flex-col gap-0.5 px-4 py-3 transition-colors"
-                      style={{ color: '#c9c9c9' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#2a2a2a'}
+                      style={{ color: c.text, borderBottom: `1px solid ${c.borderLight}` }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = c.menuHover}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
-                      <span className="text-sm font-medium truncate" style={{ color: '#e0e0e0' }}>{note.title || 'Untitled'}</span>
-                      <span className="text-xs truncate" style={{ color: '#555555' }}>{note.content?.replace(/<[^>]*>/g, '').slice(0, 60)}...</span>
+                      <span className="text-sm font-medium truncate" style={{ color: c.textBright }}>{note.title || 'Untitled'}</span>
+                      <span className="text-xs truncate" style={{ color: c.textMuted }}>{note.content?.replace(/<[^>]*>/g, '').slice(0, 60)}...</span>
                     </li>
                   ))}
                 </ul>
@@ -242,11 +263,10 @@ export function Sidebar({
         {activeTab === SidebarTabs.ALL && folders.map((folder) => (
           <div key={folder.id} className="mb-0.5">
             {editingItem && editingItem.kind === 'folder' && editingItem.id === folder.id ? (
-              // ✅ CHANGED: py-1.5 → py-2, text-xs → text-sm
               <div className="flex items-center rounded-md px-2.5 py-2.5 text-[15px] leading-snug"
-                style={{ color: '#9ca3af' }}>
-                <ChevronDown size={16} strokeWidth={1.75} className="mr-1 flex-shrink-0" style={{ color: '#6b7280' }} />
-                <Folder size={17} strokeWidth={1.75} className="mr-2 flex-shrink-0" style={{ color: '#9ca3af' }} />
+                style={{ color: c.icon }}>
+                <ChevronDown size={16} strokeWidth={1.75} className="mr-1 flex-shrink-0" style={{ color: c.iconMuted }} />
+                <Folder size={17} strokeWidth={1.75} className="mr-2 flex-shrink-0" style={{ color: c.icon }} />
                 <input
                   autoFocus
                   value={editingItem.tempName}
@@ -256,9 +276,8 @@ export function Sidebar({
                     if (e.key === 'Enter') { e.preventDefault(); onCommitEditing() }
                     if (e.key === 'Escape') { e.preventDefault(); onCancelEditing() }
                   }}
-                  // ✅ CHANGED: text-xs → text-sm
                   className="w-full rounded-sm px-1 py-0.5 text-[15px] outline-none"
-                  style={{ background: '#1a1a1a', color: '#ffffff', border: '1px solid #444444' }}
+                  style={{ background: c.inputBg, color: c.textHeading, border: `1px solid ${c.inputBorder}` }}
                 />
               </div>
             ) : (
@@ -266,19 +285,34 @@ export function Sidebar({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onToggleFolderOpen(folder.id); onSelectFolder(folder.id) }}
                 onContextMenu={(e) => onSidebarContext(e, { type: 'folder', folder })}
-                className={classNames(
-                  'flex w-full items-center justify-between rounded-md px-2.5 py-2.5 text-left text-[15px] font-medium leading-snug transition-colors',
+                className="flex w-full items-center justify-between rounded-md px-2.5 py-2.5 text-left text-[15px] font-medium leading-snug transition-colors"
+                style={
                   !isMobile && selectedFolderId === folder.id && !selectedNoteId
-                    ? 'bg-[#505050] text-[#f3f4f6] hover:bg-[#464646]'
-                    : 'text-[#9ca3af] hover:bg-[#3a3a3a] hover:text-[#f3f4f6]',
-                )}
+                    ? { background: c.selected, color: c.selectedText }
+                    : { color: c.icon }
+                }
+                onMouseEnter={(e) => {
+                  if (isMobile || !(selectedFolderId === folder.id && !selectedNoteId)) {
+                    e.currentTarget.style.background = c.hover
+                    e.currentTarget.style.color = c.hoverText
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile && selectedFolderId === folder.id && !selectedNoteId) {
+                    e.currentTarget.style.background = c.selected
+                    e.currentTarget.style.color = c.selectedText
+                  } else {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = c.icon
+                  }
+                }}
               >
                 <span className="flex items-center gap-2 min-w-0 flex-1">
                   {openFolders.includes(folder.id)
-                    ? <ChevronDown size={16} strokeWidth={1.75} className="flex-shrink-0" style={{ color: '#6b7280' }} />
-                    : <ChevronRight size={16} strokeWidth={1.75} className="flex-shrink-0" style={{ color: '#6b7280' }} />
+                    ? <ChevronDown size={16} strokeWidth={1.75} className="flex-shrink-0" style={{ color: c.iconMuted }} />
+                    : <ChevronRight size={16} strokeWidth={1.75} className="flex-shrink-0" style={{ color: c.iconMuted }} />
                   }
-                  <Folder size={17} strokeWidth={1.75} className="flex-shrink-0" style={{ color: '#9ca3af' }} />
+                  <Folder size={17} strokeWidth={1.75} className="flex-shrink-0" style={{ color: c.icon }} />
                   <span className="truncate min-w-0">{folder.name || 'New Folder'}</span>
                 </span>
               </button>
@@ -288,9 +322,8 @@ export function Sidebar({
             {openFolders.includes(folder.id) &&
               notes.filter((n) => n.folder_id === folder.id).map((note) => (
                 editingItem && editingItem.kind === 'note' && editingItem.id === note.id ? (
-                  // ✅ CHANGED: text-[11px] → text-xs
-                  <div key={note.id} className="ml-6 mt-0.5 flex w-[calc(100%-1.5rem)] items-center rounded-md px-2.5 py-2 text-[13px] leading-snug"
-                    style={{ color: '#9ca3af' }}>
+                  <div key={note.id} className={classNames('ml-6 mt-0.5 flex w-[calc(100%-1.5rem)] items-center rounded-md px-2.5 leading-snug', isMobile ? 'py-2.5 text-[15px]' : 'py-1.5 text-[14px]')}
+                    style={{ color: c.icon }}>
                     <input
                       autoFocus
                       value={editingItem.tempName}
@@ -300,9 +333,8 @@ export function Sidebar({
                         if (e.key === 'Enter') { e.preventDefault(); onCommitEditing() }
                         if (e.key === 'Escape') { e.preventDefault(); onCancelEditing() }
                       }}
-                      // ✅ CHANGED: text-[11px] → text-xs
-                      className="w-full rounded-sm px-1 py-0.5 text-[13px] outline-none"
-                      style={{ background: '#1a1a1a', color: '#ffffff', border: '1px solid #444444' }}
+                      className={classNames('w-full rounded-sm px-1 py-0.5 outline-none', isMobile ? 'text-[15px]' : 'text-[14px]')}
+                      style={{ background: c.inputBg, color: c.textHeading, border: `1px solid ${c.inputBorder}` }}
                     />
                   </div>
                 ) : (
@@ -316,29 +348,48 @@ export function Sidebar({
                     }}
                     onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                     className={classNames(
-                      'ml-6 mt-0.5 mb-0.5 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] leading-snug transition-colors',
-                      isMobile && 'active:scale-[0.97] active:opacity-80',
-                      !isMobile && selectedNoteId === note.id
-                        ? 'bg-[#505050] text-[#f3f4f6] hover:bg-[#464646]'
-                        : selectedNoteIds.includes(note.id)
-                          ? 'bg-[#3a3a3a] text-[#e0e0e0] hover:bg-[#444444]'
-                          : 'text-[#9ca3af] hover:bg-[#3a3a3a] hover:text-[#f3f4f6]',
+                      'ml-6 mt-0.5 mb-0.5 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md px-2.5 text-left leading-snug transition-colors',
+                      isMobile ? 'py-2.5 text-[15px] active:scale-[0.97] active:opacity-80' : 'py-1.5 text-[14px]',
                     )}
-                    style={selectedNoteIds.includes(note.id) && selectedNoteId !== note.id ? { boxShadow: 'inset 2px 0 0 #9ca3af' } : undefined}
+                    style={
+                      !isMobile && selectedNoteId === note.id
+                        ? { background: c.selected, color: c.selectedText }
+                        : selectedNoteIds.includes(note.id)
+                          ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
+                          : { color: c.icon }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!(!isMobile && selectedNoteId === note.id)) {
+                        e.currentTarget.style.background = selectedNoteIds.includes(note.id) ? c.multiSelectHover : c.hover
+                        e.currentTarget.style.color = c.hoverText
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile && selectedNoteId === note.id) {
+                        e.currentTarget.style.background = c.selected
+                        e.currentTarget.style.color = c.selectedText
+                      } else if (selectedNoteIds.includes(note.id)) {
+                        e.currentTarget.style.background = c.multiSelect
+                        e.currentTarget.style.color = c.multiSelectText
+                      } else {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = c.icon
+                      }
+                    }}
                   >
                     <FileText
                       size={15}
                       strokeWidth={1.75}
                       className="flex-shrink-0"
-                      style={{ color: '#6b7280' }}
+                      style={{ color: c.iconMuted }}
                     />
                     <span className="flex-1 truncate">{note.title || 'Untitled'}</span>
-                    {note.is_favorite && <Star size={13} fill='#eab308' color='#eab308' className="flex-shrink-0" />}
+                    {note.is_favorite && <Star size={13} fill={c.favorite} color={c.favorite} className="flex-shrink-0" />}
                     {isMobile && (
                       <button
                         type="button"
                         className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded transition-colors"
-                        style={{ color: '#6b7280' }}
+                        style={{ color: c.iconMuted }}
                         onClick={(e) => {
                           e.stopPropagation()
                           if (sidebarContext?.item?.type === 'note' && sidebarContext.item.note?.id === note.id) {
@@ -371,9 +422,8 @@ export function Sidebar({
             .filter((n) => activeTab === SidebarTabs.FAVORITES ? true : !n.folder_id)
             .map((note) => (
               editingItem && editingItem.kind === 'note' && editingItem.id === note.id ? (
-                // ✅ CHANGED: text-xs → text-sm, py-1.5 → py-2
-                <div key={note.id} className="flex items-center rounded-md px-2.5 py-2.5 text-[15px] leading-snug"
-                  style={{ color: '#9ca3af' }}>
+                <div key={note.id} className={classNames('flex items-center rounded-md px-2.5 leading-snug', isMobile ? 'py-2.5 text-[15px]' : 'py-1.5 text-[14px]')}
+                  style={{ color: c.icon }}>
                   <input
                     autoFocus
                     value={editingItem.tempName}
@@ -383,8 +433,8 @@ export function Sidebar({
                       if (e.key === 'Enter') { e.preventDefault(); onCommitEditing() }
                       if (e.key === 'Escape') { e.preventDefault(); onCancelEditing() }
                     }}
-                    className="w-full rounded-sm px-1 py-0.5 text-[15px] outline-none"
-                    style={{ background: '#1a1a1a', color: '#ffffff', border: '1px solid #444444' }}
+                    className={classNames('w-full rounded-sm px-1 py-0.5 outline-none', isMobile ? 'text-[15px]' : 'text-[14px]')}
+                    style={{ background: c.inputBg, color: c.textHeading, border: `1px solid ${c.inputBorder}` }}
                   />
                 </div>
               ) : (
@@ -398,29 +448,48 @@ export function Sidebar({
                   }}
                   onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
                   className={classNames(
-                    'flex w-full items-center gap-2 rounded-md px-2.5 py-2.5 mb-0.5 text-left text-[15px] leading-snug transition-colors',
-                    isMobile && 'active:scale-[0.97] active:opacity-80',
-                    !isMobile && selectedNoteId === note.id
-                      ? 'bg-[#505050] text-[#f3f4f6] hover:bg-[#464646]'
-                      : selectedNoteIds.includes(note.id)
-                        ? 'bg-[#3a3a3a] text-[#e0e0e0] hover:bg-[#444444]'
-                        : 'text-[#9ca3af] hover:bg-[#3a3a3a] hover:text-[#f3f4f6]',
+                    'flex w-full items-center gap-2 rounded-md px-2.5 mb-0.5 text-left leading-snug transition-colors',
+                    isMobile ? 'py-2.5 text-[15px] active:scale-[0.97] active:opacity-80' : 'py-1.5 text-[14px]',
                   )}
-                  style={selectedNoteIds.includes(note.id) && selectedNoteId !== note.id ? { boxShadow: 'inset 2px 0 0 #9ca3af' } : undefined}
+                  style={
+                    !isMobile && selectedNoteId === note.id
+                      ? { background: c.selected, color: c.selectedText }
+                      : selectedNoteIds.includes(note.id)
+                        ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
+                        : { color: c.icon }
+                  }
+                  onMouseEnter={(e) => {
+                    if (!(!isMobile && selectedNoteId === note.id)) {
+                      e.currentTarget.style.background = selectedNoteIds.includes(note.id) ? c.multiSelectHover : c.hover
+                      e.currentTarget.style.color = c.hoverText
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMobile && selectedNoteId === note.id) {
+                      e.currentTarget.style.background = c.selected
+                      e.currentTarget.style.color = c.selectedText
+                    } else if (selectedNoteIds.includes(note.id)) {
+                      e.currentTarget.style.background = c.multiSelect
+                      e.currentTarget.style.color = c.multiSelectText
+                    } else {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = c.icon
+                    }
+                  }}
                 >
                   <FileText
                     size={16}
                     strokeWidth={1.75}
                     className="flex-shrink-0"
-                    style={{ color: '#6b7280' }}
+                    style={{ color: c.iconMuted }}
                   />
                   <span className="flex-1 truncate min-w-0">{note.title || 'Untitled'}</span>
-                  {note.is_favorite && <Star size={13} fill='#eab308' color='#eab308' className="flex-shrink-0" />}
+                  {note.is_favorite && <Star size={13} fill={c.favorite} color={c.favorite} className="flex-shrink-0" />}
                   {isMobile && (
                     <button
                       type="button"
                       className="flex-shrink-0 flex items-center justify-center h-7 w-7 rounded transition-colors"
-                      style={{ color: '#6b7280' }}
+                      style={{ color: c.iconMuted }}
                       onClick={(e) => {
                         e.stopPropagation()
                         if (sidebarContext?.item?.type === 'note' && sidebarContext.item.note?.id === note.id) {
@@ -479,4 +548,6 @@ Sidebar.propTypes = {
   search: PropTypes.string,
   onChangeSearch: PropTypes.func,
   onLogout: PropTypes.func,
+  theme: PropTypes.string,
+  onToggleTheme: PropTypes.func,
 }

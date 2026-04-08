@@ -3,8 +3,11 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
 import Mathematics from '@tiptap/extension-mathematics'
+import Color from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
 import { CodeBlockWithToolbar } from './CodeBlockWithToolbar'
 import { Star, Trash2 } from 'lucide-react'
+import { getColors } from '../theme'
 import 'katex/dist/katex.min.css'
 
 export function EditorPane({
@@ -21,7 +24,9 @@ export function EditorPane({
   onDeleteNote,
   setEditorInstance,
   isMobile = false,
+  theme = 'dark',
 }) {
+  const c = getColors(theme)
   const isFormatMenuOpenRef = useRef(isFormatMenuOpen)
   const onFormatMenuKeyDownRef = useRef(onFormatMenuKeyDown)
   const onSlashKeyRef = useRef(onSlashKey)
@@ -41,6 +46,8 @@ export function EditorPane({
         }),
         CodeBlockWithToolbar,
         Highlight,
+        TextStyle,
+        Color,
         Mathematics,
       ],
       content: selectedNote?.content || '',
@@ -138,7 +145,7 @@ export function EditorPane({
   if (loading) {
     return (
       <section className="flex-1 min-h-0 flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#555555' }}>Loading notes…</p>
+        <p className="text-sm" style={{ color: c.textMuted }}>Loading notes…</p>
       </section>
     )
   }
@@ -146,12 +153,12 @@ export function EditorPane({
   if (!selectedNote) {
     return (
       <section className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3">
-        <p className="text-sm" style={{ color: '#555555' }}>No notes yet.</p>
+        <p className="text-sm" style={{ color: c.textMuted }}>No notes yet.</p>
         <button
           type="button"
           onClick={onCreateNote}
           className="rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
-          style={{ background: '#3730a3' }}
+          style={{ background: c.accent }}
         >
           Create your first note
         </button>
@@ -164,11 +171,10 @@ return (
       <div
         className="flex flex-col flex-1 min-h-0"
         style={{
-          background: '#1a1a1a',
+          background: c.mainBg,
           padding: isMobile ? '10px 16px' : 'clamp(10px, 2.4vw, 38px)',
         }}
       >
-        {/* Header row — title + icons (~40% tighter spacing vs prior) */}
         <div className="flex items-start justify-between mb-0.5 gap-4">
           <input
             type="text"
@@ -177,7 +183,7 @@ return (
             className="flex-1 bg-transparent min-w-0 font-bold tracking-tight focus:outline-none"
             style={{
               fontSize: 'clamp(1.25rem, 4vw, 1.875rem)',
-              background: 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)',
+              backgroundImage: c.titleGradient,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -185,38 +191,33 @@ return (
             placeholder="Untitled"
           />
 
-          {/* Action icons — hidden on mobile (live in TopBar instead) */}
           {!isMobile && (
             <div className="flex items-center gap-1 pt-0.5 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => onToggleFavorite(selectedNote)}
                 className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
-                style={{ color: selectedNote.is_favorite ? '#eab308' : '#444444' }}
+                style={{ color: selectedNote.is_favorite ? c.favorite : c.iconDark }}
                 onMouseEnter={(e) => {
-                  if (!selectedNote.is_favorite) e.currentTarget.style.color = '#888888'
-                  e.currentTarget.style.background = '#1a1a1a'
+                  if (!selectedNote.is_favorite) e.currentTarget.style.color = c.icon
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = selectedNote.is_favorite ? '#eab308' : '#444444'
-                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = selectedNote.is_favorite ? c.favorite : c.iconDark
                 }}
                 title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
               >
-                <Star size={18} fill={selectedNote.is_favorite ? '#eab308' : 'none'} strokeWidth={1.75} />
+                <Star size={18} fill={selectedNote.is_favorite ? c.favorite : 'none'} strokeWidth={1.75} />
               </button>
               <button
                 type="button"
                 onClick={() => onDeleteNote(selectedNote.id)}
                 className="flex items-center justify-center h-8 w-8 rounded-md transition-colors"
-                style={{ color: '#444444' }}
+                style={{ color: c.iconDark }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#f87171'
-                  e.currentTarget.style.background = '#1a1a1a'
+                  e.currentTarget.style.color = c.danger
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#444444'
-                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = c.iconDark
                 }}
                 title="Delete note"
               >
@@ -226,15 +227,13 @@ return (
           )}
         </div>
 
-        {/* Last edited */}
-        <p className="mb-3.5 text-xs" style={{ color: '#3a3a3a' }}>
+        <p className="mb-3.5 text-xs" style={{ color: c.lastEdited }}>
           Last edited{' '}
           {selectedNote.updated_at
             ? new Date(selectedNote.updated_at).toLocaleString()
             : 'just now'}
         </p>
 
-        {/* Editor */}
         <EditorContent editor={editor} className="flex-1 overflow-y-auto scroll-thin" />
       </div>
     </section>
