@@ -20,21 +20,21 @@ export function Auth() {
     <div
       className="flex min-h-screen items-center justify-center"
       style={{
-        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(16, 185, 129, 0.08), transparent 55%), #0f0f0f',
+        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(16, 185, 129, 0.06), transparent 55%), #0a0a0a',
       }}
     >
       <div
         className="w-full max-w-sm rounded-2xl p-8"
         style={{
-          background: '#1a1a1a',
-          border: '1px solid rgba(16, 185, 129, 0.18)',
-          boxShadow: '0 0 0 1px rgba(16, 185, 129, 0.06), 0 25px 50px -12px rgba(0, 0, 0, 0.55)',
+          background: '#111111',
+          border: '1px solid rgba(16, 185, 129, 0.12)',
+          boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.7)',
         }}
       >
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <span
-            className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border p-1"
+            className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border p-1"
             style={{
               borderColor: 'rgba(16, 185, 129, 0.35)',
               background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, rgba(26, 26, 26, 0.9) 100%)',
@@ -61,14 +61,14 @@ export function Auth() {
             type="button"
             onClick={handleGoogle}
             className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer"
-            style={{ background: '#232323', border: '1px solid rgba(16, 185, 129, 0.12)', color: '#c9c9c9' }}
+            style={{ background: '#161616', border: '1px solid #222222', color: '#b4b4b4' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.08)'
-              e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.35)'
+              e.currentTarget.style.background = '#1a1a1a'
+              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.25)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#232323'
-              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.12)'
+              e.currentTarget.style.background = '#161616'
+              e.currentTarget.style.borderColor = '#222222'
             }}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -84,14 +84,14 @@ export function Auth() {
             type="button"
             onClick={handleGithub}
             className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer"
-            style={{ background: '#232323', border: '1px solid rgba(16, 185, 129, 0.12)', color: '#c9c9c9' }}
+            style={{ background: '#161616', border: '1px solid #222222', color: '#b4b4b4' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.08)'
-              e.currentTarget.style.borderColor = 'rgba(52, 211, 153, 0.35)'
+              e.currentTarget.style.background = '#1a1a1a'
+              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.25)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#232323'
-              e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.12)'
+              e.currentTarget.style.background = '#161616'
+              e.currentTarget.style.borderColor = '#222222'
             }}
           >
             <svg className="h-5 w-5 fill-white" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@ export function Auth() {
           </button>
         </div>
 
-        <p className="mt-6 text-center text-xs" style={{ color: '#525252' }}>
+        <p className="mt-6 text-center text-[11px]" style={{ color: '#333333' }}>
           By signing in, you agree to our terms of service
         </p>
       </div>

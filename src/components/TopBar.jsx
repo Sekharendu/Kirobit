@@ -111,8 +111,8 @@ export function TopBar({
           <div
             className="flex items-center gap-2 px-3 py-1.5"
             style={showSearchPanel
-              ? { background: c.searchBg, border: `1px solid ${c.border}`, borderBottom: 'none', borderRadius: '6px 6px 0 0' }
-              : { background: c.searchBg, border: `1px solid ${c.border}`, borderRadius: '6px' }}
+              ? { background: c.searchBg, border: `1px solid ${c.border}`, borderBottom: 'none', borderRadius: '8px 8px 0 0' }
+              : { background: c.searchBg, border: `1px solid ${c.border}`, borderRadius: '8px' }}
           >
           <Search size={14} style={{ color: c.iconDark }} />
           <input
@@ -136,7 +136,7 @@ export function TopBar({
           </div>
 
           {showSearchPanel && (
-          <div className="absolute left-0 right-0 top-full z-50 rounded-b-lg rounded-t-none shadow-2xl overflow-hidden"
+          <div className="absolute left-0 right-0 top-full z-50 rounded-b-lg rounded-t-none shadow-2xl shadow-black/25 overflow-hidden"
             style={{ background: c.searchResultBg, border: `1px solid ${c.border}`, borderTop: 'none' }}>
             {filteredNotes.length === 0 ? (
               <p className="px-4 py-3 text-sm text-center" style={{ color: c.textMuted }}>
@@ -221,7 +221,7 @@ export function TopBar({
 
           {isUserMenuOpen && (
             <div
-              className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg shadow-2xl overflow-hidden"
+              className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl shadow-2xl shadow-black/30 overflow-hidden"
               style={{ background: c.menuBg, border: `1px solid ${c.border}` }}
             >
               <div className="px-3 py-2" style={{ borderBottom: `1px solid ${c.border}` }}>

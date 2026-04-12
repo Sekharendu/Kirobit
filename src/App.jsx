@@ -888,7 +888,7 @@ function App() {
 
     {sidebarContext && (
         <div
-          className="fixed z-40 min-w-[11rem] rounded-md py-1 px-0.5 text-[13px] shadow-xl"
+          className="fixed z-40 min-w-[11rem] rounded-xl py-1.5 px-1 text-[13px] shadow-2xl shadow-black/40"
           style={{ top: sidebarContext.y, left: sidebarContext.x, color: c.textBright, background: c.contextBg, border: `1px solid ${c.border}` }}
           onClick={(e) => e.stopPropagation()}
           role="menu"
@@ -937,7 +937,7 @@ function App() {
     {menu && formatMenuStylePos && (
       <div
         ref={formatMenuPopoverRef}
-        className="format-menu-popover fixed z-50 w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl py-1.5 shadow-2xl shadow-black/40"
+        className="format-menu-popover fixed z-50 w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl py-1.5 shadow-2xl shadow-black/50"
         style={{
           top: formatMenuStylePos.top,
           left: formatMenuStylePos.left,

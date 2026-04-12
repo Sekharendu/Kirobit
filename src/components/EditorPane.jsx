@@ -152,13 +152,39 @@ export function EditorPane({
 
   if (!selectedNote) {
     return (
-      <section className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3">
-        <p className="text-sm" style={{ color: c.textMuted }}>No notes yet.</p>
+      <section className="flex-1 min-h-0 flex flex-col items-center justify-center gap-5 px-6">
+        <div className="flex flex-col items-center gap-1.5 select-none">
+          <div className="mb-1 rounded-xl p-3" style={{ background: theme === 'dark' ? 'rgba(16,185,129,0.06)' : 'rgba(16,185,129,0.05)' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme === 'dark' ? '#2a2a2a' : '#d1d5db'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <line x1="10" y1="9" x2="8" y2="9"/>
+            </svg>
+          </div>
+          <p className="text-sm font-medium" style={{ color: c.textMuted }}>No note selected</p>
+          <p className="text-xs text-center max-w-[220px] leading-relaxed" style={{ color: theme === 'dark' ? '#333' : '#bbb' }}>
+            Pick a note from the sidebar or create a new one to start writing.
+          </p>
+        </div>
         <button
           type="button"
           onClick={onCreateNote}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
-          style={{ background: c.accent }}
+          className="rounded-lg px-4 py-2 text-sm font-medium transition-all"
+          style={{
+            background: theme === 'dark' ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)',
+            color: '#10b981',
+            border: `1px solid ${theme === 'dark' ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.2)'}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = theme === 'dark' ? 'rgba(16,185,129,0.18)' : 'rgba(16,185,129,0.14)'
+            e.currentTarget.style.borderColor = 'rgba(16,185,129,0.35)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = theme === 'dark' ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'
+            e.currentTarget.style.borderColor = theme === 'dark' ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.2)'
+          }}
         >
           Create your first note
         </button>
@@ -182,11 +208,9 @@ return (
             onChange={onTitleChange}
             className="flex-1 bg-transparent min-w-0 font-bold tracking-tight focus:outline-none"
             style={{
-              fontSize: 'clamp(1.25rem, 4vw, 1.875rem)',
-              backgroundImage: c.titleGradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              fontSize: 'clamp(1.25rem, 4vw, 1.75rem)',
+              color: c.textHeading,
+              letterSpacing: '-0.025em',
             }}
             placeholder="Untitled"
           />
@@ -227,10 +251,10 @@ return (
           )}
         </div>
 
-        <p className="mb-3.5 text-xs" style={{ color: c.lastEdited }}>
-          Last edited{' '}
+        <p className="mb-4 text-[11px] font-medium tracking-wide uppercase" style={{ color: c.lastEdited, letterSpacing: '0.06em' }}>
+          Edited{' '}
           {selectedNote.updated_at
-            ? new Date(selectedNote.updated_at).toLocaleString()
+            ? new Date(selectedNote.updated_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             : 'just now'}
         </p>
 
