@@ -246,7 +246,7 @@ export function Sidebar({
       </div>
 
       <div className={classNames("flex items-center", isMobile ? "px-5 pb-2 gap-2" : "px-3 py-2 gap-2")}
-        style={isMobile ? {} : { borderBottom: `1px solid ${c.border}` }}>
+        style={isMobile ? { borderBottom: `1px solid ${c.border}` } : {}}>
         {isMobile ? (
           <>
             {/* Pill tab switcher */}

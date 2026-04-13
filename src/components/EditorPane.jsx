@@ -142,6 +142,14 @@ export function EditorPane({
     }
   }, [selectedNote?.id])
 
+  const noteHasBodyText = Boolean(
+    selectedNote?.content
+      ?.replace(/<\s*br\s*\/?>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .trim(),
+  )
+
   if (loading) {
     return (
       <section className="flex-1 min-h-0 flex items-center justify-center">
@@ -266,6 +274,15 @@ return (
               : 'just now'}
           </span>
         </div>
+
+        {!noteHasBodyText && (
+          <p
+            className={`mb-2 ${isMobile ? 'text-[12px]' : 'text-[11px]'} select-none`}
+            style={{ color: c.textMuted }}
+          >
+            Type / to open the formatting menu.
+          </p>
+        )}
 
         <EditorContent editor={editor} className="flex-1 overflow-y-auto scroll-thin" />
       </div>
