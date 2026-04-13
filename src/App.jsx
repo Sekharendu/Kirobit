@@ -551,25 +551,29 @@ function App() {
 
   const handleTitleChange = (e) => updateNoteContent({ title: e.target.value })
 
-  const handleCreateNote = useCallback(() => {
+  const handleCreateNote = useCallback((folderId) => {
+    const targetFolder = folderId !== undefined ? folderId : selectedFolderId
     const tempId = `temp-${Date.now()}`
     const now = new Date().toISOString()
     const optimisticNote = {
-      id: tempId, user_id: user?.id, title: 'New Page', content: '',
-      folder_id: selectedFolderId, is_favorite: false, created_at: now, updated_at: now,
+      id: tempId, user_id: user?.id, title: 'Untitled', content: '',
+      folder_id: targetFolder, is_favorite: false, created_at: now, updated_at: now,
     }
     setNotes(prev => [optimisticNote, ...prev])
     setSelectedNoteId(tempId)
+    if (targetFolder && !openFolders.includes(targetFolder)) {
+      setOpenFolders(prev => [...prev, targetFolder])
+    }
     if (isMobile) setMobileView('editor')
 
     supabase.from('notes').insert([{
-      user_id: user?.id, title: 'New Page', content: '', folder_id: selectedFolderId,
+      user_id: user?.id, title: 'Untitled', content: '', folder_id: targetFolder,
     }]).select().single().then(({ data, error }) => {
       if (error) { console.error('Error creating note', error); return }
       setNotes(prev => {
         const temp = prev.find(n => n.id === tempId)
         if (!temp) return prev
-        if (temp.title !== 'New Page' || temp.content !== '') {
+        if (temp.title !== 'Untitled' || temp.content !== '') {
           supabase.from('notes').update({ title: temp.title, content: temp.content })
             .eq('id', data.id).then(({ error: e }) => { if (e) console.error('Sync error', e) })
         }
@@ -577,7 +581,7 @@ function App() {
       })
       setSelectedNoteId(prev => prev === tempId ? data.id : prev)
     })
-  }, [user?.id, selectedFolderId, isMobile])
+  }, [user?.id, selectedFolderId, openFolders, isMobile])
 
   const handleCreateFolder = async () => {
     const tempId = `temp-folder-${Date.now()}`
@@ -734,6 +738,37 @@ function App() {
     setOpenFolders((prev) => prev.includes(folderId) ? prev.filter((id) => id !== folderId) : [...prev, folderId])
   }
 
+  const handleDropNote = useCallback(async (noteId, { targetFolderId, targetNoteId, position }) => {
+    const note = notesRef.current.find(n => n.id === noteId)
+    if (!note) return
+    const folderChanged = (note.folder_id || null) !== (targetFolderId === undefined ? note.folder_id : targetFolderId ?? null)
+
+    if (targetFolderId && !openFolders.includes(targetFolderId)) {
+      setOpenFolders(prev => [...prev, targetFolderId])
+    }
+
+    setNotes(prev => {
+      const idx = prev.findIndex(n => n.id === noteId)
+      if (idx === -1) return prev
+      const draggedNote = { ...prev[idx], ...(folderChanged ? { folder_id: targetFolderId ?? null } : {}) }
+      const without = [...prev.slice(0, idx), ...prev.slice(idx + 1)]
+
+      if (targetNoteId) {
+        let targetIdx = without.findIndex(n => n.id === targetNoteId)
+        if (targetIdx === -1) return [draggedNote, ...without]
+        if (position === 'after') targetIdx += 1
+        return [...without.slice(0, targetIdx), draggedNote, ...without.slice(targetIdx)]
+      }
+
+      return [...without, draggedNote]
+    })
+
+    if (folderChanged && !String(noteId).startsWith('temp-')) {
+      const { error } = await supabase.from('notes').update({ folder_id: targetFolderId ?? null }).eq('id', noteId)
+      if (error) console.error('Error moving note', error)
+    }
+  }, [openFolders])
+
   const clearMenus = () => { closeSidebarContext(); setMenu(null); setColorSubmenu(null); setSelectedFolderId(null) }
 
   const formatMenuPopoverRef = useRef(null)
@@ -828,6 +863,7 @@ function App() {
           sidebarContext={sidebarContext}
           selectedNoteIds={selectedNoteIds}
           onToggleNoteSelection={handleToggleNoteSelection}
+          onDropNote={handleDropNote}
           isMobile={isMobile}
           onChangeSearch={setSearch}
           onLogout={handleLogout}

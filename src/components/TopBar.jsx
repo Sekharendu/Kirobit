@@ -173,28 +173,88 @@ export function TopBar({
       </div>
 
       {isMobile ? (
-        selectedNote && (
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => onToggleFavorite?.(selectedNote)}
-              className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
-              style={{ color: selectedNote.is_favorite ? c.favorite : c.textMuted }}
-              title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
+        <div className="relative flex items-center gap-0.5 flex-shrink-0" ref={userMenuRef}>
+          {selectedNote && (
+            <>
+              <button
+                type="button"
+                onClick={() => onToggleFavorite?.(selectedNote)}
+                className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
+                style={{ color: selectedNote.is_favorite ? c.favorite : c.textMuted }}
+                title={selectedNote.is_favorite ? 'Remove from favourites' : 'Add to favourites'}
+              >
+                <Star size={18} fill={selectedNote.is_favorite ? c.favorite : 'none'} strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onDeleteNote?.(selectedNote.id)}
+                className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
+                style={{ color: c.textMuted }}
+                title="Delete note"
+              >
+                <Trash2 size={18} strokeWidth={1.75} />
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setIsUserMenuOpen(prev => !prev)}
+            className="flex items-center justify-center rounded-full focus:outline-none ml-1"
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 rounded-full object-cover"
+                style={{ border: `2px solid ${c.avatarBorder}` }}
+              />
+            ) : (
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold"
+                style={{ background: c.avatarBg, border: `2px solid ${c.avatarBorder}`, color: c.textHeading }}
+              >
+                {user?.email?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
+          </button>
+          {isUserMenuOpen && (
+            <div
+              className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl shadow-2xl shadow-black/30 overflow-hidden"
+              style={{ background: c.menuBg, border: `1px solid ${c.border}` }}
             >
-              <Star size={18} fill={selectedNote.is_favorite ? c.favorite : 'none'} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onDeleteNote?.(selectedNote.id)}
-              className="flex items-center justify-center h-9 w-9 rounded-md transition-colors"
-              style={{ color: c.textMuted }}
-              title="Delete note"
-            >
-              <Trash2 size={18} strokeWidth={1.75} />
-            </button>
-          </div>
-        )
+              <div className="px-3 py-2" style={{ borderBottom: `1px solid ${c.border}` }}>
+                <p className="text-xs font-medium truncate" style={{ color: c.textBright }}>
+                  {user?.user_metadata?.full_name
+                    || user?.user_metadata?.user_name
+                    || user?.user_metadata?.name
+                    || 'User'}
+                </p>
+                <p className="text-[11px] truncate" style={{ color: c.textMuted }}>
+                  {user?.email}
+                </p>
+              </div>
+              <button
+                onClick={() => { onToggleTheme?.(); setIsUserMenuOpen(false) }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors"
+                style={{ color: c.text, borderBottom: `1px solid ${c.border}` }}
+                onMouseEnter={(e) => e.currentTarget.style.background = c.menuHover}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                {theme === 'dark' ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
+                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              </button>
+              <button
+                onClick={() => { onLogout(); setIsUserMenuOpen(false) }}
+                className="w-full px-3 py-2 text-left text-sm transition-colors"
+                style={{ color: c.danger }}
+                onMouseEnter={(e) => e.currentTarget.style.background = c.menuHover}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                Log out
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="relative flex-shrink-0" ref={userMenuRef}>
           <button

@@ -36,6 +36,7 @@ export function Sidebar({
   sidebarContext,
   selectedNoteIds = [],
   onToggleNoteSelection,
+  onDropNote,
   isMobile = false,
   search = '',
   onChangeSearch,
@@ -49,6 +50,82 @@ export function Sidebar({
   const searchRef = useRef(null)
   const searchInputRef = useRef(null)
   const userMenuRef = useRef(null)
+
+  const [dragState, setDragState] = useState(null)
+  const [dropTarget, setDropTarget] = useState(null)
+
+  const handleNoteDragStart = (e, note) => {
+    setDragState({ noteId: note.id, fromFolderId: note.folder_id })
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', note.id)
+  }
+
+  const handleNoteDragEnd = () => {
+    setDragState(null)
+    setDropTarget(null)
+  }
+
+  const handleFolderDragOver = (e, folderId) => {
+    if (!dragState) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDropTarget(prev => {
+      if (prev?.type === 'folder' && prev.id === folderId) return prev
+      return { type: 'folder', id: folderId }
+    })
+  }
+
+  const handleFolderDragLeave = (e) => {
+    if (e.currentTarget.contains(e.relatedTarget)) return
+    setDropTarget(prev => prev?.type === 'folder' ? null : prev)
+  }
+
+  const handleNoteDragOver = (e, note) => {
+    if (!dragState || dragState.noteId === note.id) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'move'
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midY = rect.top + rect.height / 2
+    const position = e.clientY < midY ? 'before' : 'after'
+    setDropTarget(prev => {
+      if (prev?.type === 'note' && prev.id === note.id && prev.position === position) return prev
+      return { type: 'note', id: note.id, position, folderId: note.folder_id }
+    })
+  }
+
+  const handleStandaloneDragOver = (e) => {
+    if (!dragState) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDropTarget(prev => prev?.type === 'note' ? prev : { type: 'standalone' })
+  }
+
+  const handleDragDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!dragState || !dropTarget) { setDragState(null); setDropTarget(null); return }
+    const info = {}
+    if (dropTarget.type === 'folder') {
+      info.targetFolderId = dropTarget.id
+    } else if (dropTarget.type === 'note') {
+      info.targetFolderId = dropTarget.folderId ?? null
+      info.targetNoteId = dropTarget.id
+      info.position = dropTarget.position
+    } else {
+      info.targetFolderId = null
+    }
+    onDropNote(dragState.noteId, info)
+    setDragState(null)
+    setDropTarget(null)
+  }
+
+  const getNoteDropStyle = (noteId) => {
+    if (!dragState || !dropTarget || dropTarget.type !== 'note' || dropTarget.id !== noteId) return null
+    return dropTarget.position === 'before'
+      ? { boxShadow: `0 -2px 0 0 ${c.accent}` }
+      : { boxShadow: `0 2px 0 0 ${c.accent}` }
+  }
 
   const mobileFilteredNotes = (isMobile && search.trim())
     ? notes.filter((n) => {
@@ -80,25 +157,9 @@ export function Sidebar({
         {isMobile ? (
           <>
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              {(() => {
-                const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
-                return avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                    className="h-9 w-9 rounded-full object-cover flex-shrink-0"
-                    style={{ border: `2px solid ${c.border}` }}
-                  />
-                ) : (
-                  <div
-                    className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-                    style={{ background: c.hover, border: `2px solid ${c.border}`, color: c.textHeading }}
-                  >
-                    {user?.email?.[0]?.toUpperCase() ?? '?'}
-                  </div>
-                )
-              })()}
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md" aria-hidden>
+                <KiroBitLogo variant="minimal" size="xs" />
+              </span>
               <div className="flex flex-col min-w-0">
                 <span className="text-[15px] font-semibold tracking-tight truncate" style={{ color: c.textHeading }}>
                   {user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'}&apos;s Notes
@@ -117,32 +178,56 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); setIsUserMenuOpen(prev => !prev) }}
-                className="flex items-center justify-center h-9 w-9 rounded-full transition-colors"
-                style={{ color: c.icon }}
+                className="flex items-center justify-center rounded-full transition-colors"
               >
-                <MoreHorizontal size={18} strokeWidth={2} />
+                {(() => {
+                  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
+                  return avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="h-8 w-8 rounded-full object-cover flex-shrink-0"
+                      style={{ border: `2px solid ${c.border}` }}
+                    />
+                  ) : (
+                    <div
+                      className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                      style={{ background: c.hover, border: `2px solid ${c.border}`, color: c.textHeading }}
+                    >
+                      {user?.email?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                  )
+                })()}
               </button>
             </div>
             {isUserMenuOpen && (
-              <div
-                className="absolute right-5 top-full z-50 mt-1 w-48 rounded-xl shadow-2xl shadow-black/40 overflow-hidden"
-                style={{ background: c.menuBg, border: `1px solid ${c.border}` }}
-              >
-                <div className="px-3.5 py-2.5" style={{ borderBottom: `1px solid ${c.border}` }}>
-                  <p className="text-[13px] font-medium truncate" style={{ color: c.textBright }}>
-                    {user?.user_metadata?.full_name || user?.user_metadata?.user_name || user?.user_metadata?.name || 'User'}
-                  </p>
-                  <p className="text-[11px] truncate" style={{ color: c.textMuted }}>{user?.email}</p>
-                </div>
-                <button
-                  onClick={() => { onLogout?.(); setIsUserMenuOpen(false) }}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] transition-colors"
-                  style={{ color: c.danger }}
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={(e) => { e.stopPropagation(); setIsUserMenuOpen(false) }}
+                />
+                <div
+                  className="absolute right-5 top-full z-50 mt-1 w-48 rounded-xl shadow-2xl shadow-black/40 overflow-hidden"
+                  style={{ background: c.menuBg, border: `1px solid ${c.border}` }}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <LogOut size={15} strokeWidth={1.75} />
-                  Log out
-                </button>
-              </div>
+                  <div className="px-3.5 py-2.5" style={{ borderBottom: `1px solid ${c.border}` }}>
+                    <p className="text-[13px] font-medium truncate" style={{ color: c.textBright }}>
+                      {user?.user_metadata?.full_name || user?.user_metadata?.user_name || user?.user_metadata?.name || 'User'}
+                    </p>
+                    <p className="text-[11px] truncate" style={{ color: c.textMuted }}>{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { onLogout?.(); setIsUserMenuOpen(false) }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] transition-colors"
+                    style={{ color: c.danger }}
+                  >
+                    <LogOut size={15} strokeWidth={1.75} />
+                    Log out
+                  </button>
+                </div>
+              </>
             )}
           </>
         ) : (
@@ -349,12 +434,18 @@ export function Sidebar({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onToggleFolderOpen(folder.id); onSelectFolder(folder.id) }}
                 onContextMenu={(e) => onSidebarContext(e, { type: 'folder', folder })}
-                className={classNames("flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-2.5 text-[15px]")}
-                style={
-                  !isMobile && selectedFolderId === folder.id && !selectedNoteId
+                onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                onDragLeave={handleFolderDragLeave}
+                onDrop={handleDragDrop}
+                className={classNames("group/folder flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-2.5 text-[15px]")}
+                style={{
+                  ...(!isMobile && selectedFolderId === folder.id && !selectedNoteId
                     ? { background: c.selected, color: c.selectedText }
-                    : { color: c.text }
-                }
+                    : { color: c.text }),
+                  ...(dragState && dropTarget?.type === 'folder' && dropTarget.id === folder.id
+                    ? { background: `${c.accent}22`, outline: `2px dashed ${c.accent}`, outlineOffset: '-2px' }
+                    : {}),
+                }}
                 onMouseEnter={(e) => {
                   if (isMobile || !(selectedFolderId === folder.id && !selectedNoteId)) {
                     e.currentTarget.style.background = c.hover
@@ -379,11 +470,24 @@ export function Sidebar({
                   <Folder size={isMobile ? 17 : 17} strokeWidth={1.75} className="flex-shrink-0" style={{ color: c.icon }} />
                   <span className="truncate min-w-0">{folder.name || 'New Folder'}</span>
                 </span>
-                {isMobile && (
-                  <span className="text-[11px] flex-shrink-0 ml-2" style={{ color: c.textMuted }}>
+                <span className="flex items-center gap-1 flex-shrink-0 ml-2">
+                  <span className="text-[11px]" style={{ color: c.textMuted }}>
                     {notes.filter(n => n.folder_id === folder.id).length}
                   </span>
-                )}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className={classNames("inline-flex items-center justify-center rounded-md transition-colors", isMobile ? "h-7 w-7" : "h-5 w-5")}
+                    style={{ color: c.iconMuted }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = c.hover; e.currentTarget.style.color = c.textBright }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted }}
+                    onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onCreateNote(folder.id) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onCreateNote(folder.id) } }}
+                    title="New note in folder"
+                  >
+                    <Plus size={isMobile ? 16 : 14} strokeWidth={2} />
+                  </span>
+                </span>
               </button>
             )}
 
@@ -455,14 +559,22 @@ export function Sidebar({
                       else onSelectNote(note.id)
                     }}
                     onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
+                    draggable
+                    onDragStart={(e) => handleNoteDragStart(e, note)}
+                    onDragEnd={handleNoteDragEnd}
+                    onDragOver={(e) => handleNoteDragOver(e, note)}
+                    onDrop={handleDragDrop}
                     className="ml-6 mt-0.5 mb-0.5 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md px-2.5 text-left leading-snug transition-colors py-1.5 text-[14px]"
-                    style={
-                      selectedNoteId === note.id
+                    style={{
+                      ...(selectedNoteId === note.id
                         ? { background: c.selected, color: c.selectedText }
                         : selectedNoteIds.includes(note.id)
                           ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
-                          : { color: c.text }
-                    }
+                          : { color: c.text }),
+                      cursor: dragState?.noteId === note.id ? 'grabbing' : 'grab',
+                      ...(dragState?.noteId === note.id ? { opacity: 0.4 } : {}),
+                      ...(getNoteDropStyle(note.id) || {}),
+                    }}
                     onMouseEnter={(e) => {
                       if (selectedNoteId !== note.id) {
                         e.currentTarget.style.background = selectedNoteIds.includes(note.id) ? c.multiSelectHover : c.hover
@@ -494,7 +606,13 @@ export function Sidebar({
 
         {/* Standalone / Favorites notes */}
         <div className={activeTab === SidebarTabs.ALL && folders.length > 0 ? (isMobile ? 'mt-2 pt-2' : 'mt-2') : ''} 
-          style={activeTab === SidebarTabs.ALL && folders.length > 0 && isMobile ? { borderTop: `1px solid ${c.border}` } : {}}>
+          onDragOver={handleStandaloneDragOver}
+          onDrop={handleDragDrop}
+          style={{
+            ...(activeTab === SidebarTabs.ALL && folders.length > 0 && isMobile ? { borderTop: `1px solid ${c.border}` } : {}),
+            ...(dragState && !isMobile ? { minHeight: 40 } : {}),
+            ...(dragState && dropTarget?.type === 'standalone' ? { background: `${c.accent}10`, borderRadius: 8 } : {}),
+          }}>
           {displayNotes
             .filter((n) => activeTab === SidebarTabs.FAVORITES ? true : !n.folder_id)
             .map((note) => (
@@ -571,14 +689,22 @@ export function Sidebar({
                     else onSelectNote(note.id)
                   }}
                   onContextMenu={(e) => onSidebarContext(e, { type: 'note', note })}
+                  draggable={!isMobile}
+                  onDragStart={(e) => handleNoteDragStart(e, note)}
+                  onDragEnd={handleNoteDragEnd}
+                  onDragOver={(e) => handleNoteDragOver(e, note)}
+                  onDrop={handleDragDrop}
                   className="flex w-full items-center gap-2 rounded-md px-2.5 text-left leading-snug transition-colors mb-0.5 py-1.5 text-[14px]"
-                  style={
-                    selectedNoteId === note.id
+                  style={{
+                    ...(selectedNoteId === note.id
                       ? { background: c.selected, color: c.selectedText }
                       : selectedNoteIds.includes(note.id)
                         ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
-                        : { color: c.text }
-                  }
+                        : { color: c.text }),
+                    ...(!isMobile ? { cursor: dragState?.noteId === note.id ? 'grabbing' : 'grab' } : {}),
+                    ...(dragState?.noteId === note.id ? { opacity: 0.4 } : {}),
+                    ...(getNoteDropStyle(note.id) || {}),
+                  }}
                   onMouseEnter={(e) => {
                     if (selectedNoteId !== note.id) {
                       e.currentTarget.style.background = selectedNoteIds.includes(note.id) ? c.multiSelectHover : c.hover
@@ -639,6 +765,7 @@ Sidebar.propTypes = {
   sidebarContext: PropTypes.object,
   selectedNoteIds: PropTypes.array,
   onToggleNoteSelection: PropTypes.func,
+  onDropNote: PropTypes.func,
   isMobile: PropTypes.bool,
   search: PropTypes.string,
   onChangeSearch: PropTypes.func,
