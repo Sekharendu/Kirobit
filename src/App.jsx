@@ -25,6 +25,9 @@ import {
   TextSelect,
   Palette,
   ChevronRight,
+  Folder,
+  Check,
+  FileX,
 } from 'lucide-react'
 
 const TEXT_COLORS = [
@@ -158,6 +161,7 @@ function getSidebarContextMenuItems(item) {
   if (!item) return []
   if (item.type === 'multi-note') {
     return [
+      { action: 'move', label: 'Move to...', hasSubmenu: true },
       { action: 'delete-multi', label: `Delete ${item.noteIds.length} notes`, danger: true },
     ]
   }
@@ -166,6 +170,7 @@ function getSidebarContextMenuItems(item) {
     return [
       { action: 'favorite', label: isFav ? 'Remove from Favourites' : 'Add to Favourites', showStar: true },
       { action: 'rename', label: 'Rename', showStar: false },
+      { action: 'move', label: 'Move to...', hasSubmenu: true },
       { action: 'delete', label: 'Delete', danger: true },
     ]
   }
@@ -206,6 +211,7 @@ function App() {
   const isDraggingRef = useRef(false)
   const colorSubmenuBtnRef = useRef(null)
   const [colorSubmenu, setColorSubmenu] = useState(null)
+  const [moveSubmenuOpen, setMoveSubmenuOpen] = useState(false)
   const c = getColors(theme)
 
   const toggleTheme = useCallback(() => {
@@ -616,16 +622,42 @@ function App() {
     }
   }
 
-  const closeSidebarContext = () => setSidebarContext(null)
+  const closeSidebarContext = () => { setSidebarContext(null); setMoveSubmenuOpen(false) }
 
   const sidebarMenuEntries = useMemo(
     () => (sidebarContext ? getSidebarContextMenuItems(sidebarContext.item) : []),
     [sidebarContext]
   )
 
+  const handleMoveNoteToFolder = useCallback(async (noteId, targetFolderId) => {
+    setNotes(prev => prev.map(n => n.id === noteId ? { ...n, folder_id: targetFolderId } : n))
+    if (targetFolderId && !openFolders.includes(targetFolderId)) {
+      setOpenFolders(prev => [...prev, targetFolderId])
+    }
+    if (!String(noteId).startsWith('temp-')) {
+      const { error } = await supabase.from('notes').update({ folder_id: targetFolderId }).eq('id', noteId)
+      if (error) console.error('Error moving note', error)
+    }
+  }, [openFolders])
+
+  const handleMoveToFolder = useCallback(async (folderId) => {
+    const target = sidebarContextRef.current?.item
+    if (!target) return
+    if (target.type === 'note') {
+      await handleMoveNoteToFolder(target.note.id, folderId)
+    } else if (target.type === 'multi-note') {
+      for (const noteId of target.noteIds) {
+        await handleMoveNoteToFolder(noteId, folderId)
+      }
+    }
+    setMoveSubmenuOpen(false)
+    closeSidebarContext()
+  }, [handleMoveNoteToFolder])
+
   const applySidebarAction = async (action) => {
     const target = sidebarContextRef.current?.item
     if (!target) return
+    if (action === 'move') return
     if (action === 'favorite' && target.type === 'note') await handleToggleFavorite(target.note)
     if (action === 'rename') {
       if (target.type === 'folder') {
@@ -941,42 +973,105 @@ function App() {
           role="menu"
           aria-label="Note and folder actions"
         >
-          <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: c.textMuted }}>
-            Actions
-          </p>
-          {sidebarMenuEntries.map((entry, i) => {
-            const active = sidebarContextMenuIndex === i
-            return (
+          {!moveSubmenuOpen ? (
+            <>
+              <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: c.textMuted }}>
+                Actions
+              </p>
+              {sidebarMenuEntries.map((entry, i) => {
+                const active = sidebarContextMenuIndex === i
+                return (
+                  <button
+                    key={entry.action}
+                    type="button"
+                    role="menuitem"
+                    className={[
+                      'flex w-full items-center rounded-md px-3 py-2 text-left transition-colors',
+                      (entry.showStar || entry.hasSubmenu) ? 'justify-between gap-2' : '',
+                    ].filter(Boolean).join(' ')}
+                    style={
+                      active
+                        ? { background: c.contextHover, color: c.textHeading }
+                        : entry.danger
+                          ? { color: c.danger }
+                          : { color: c.textBright }
+                    }
+                    onMouseEnter={(e) => {
+                      sidebarContextMenuIndexRef.current = i
+                      setSidebarContextMenuIndex(i)
+                      if (!active) e.currentTarget.style.background = c.contextHoverAlt
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) e.currentTarget.style.background = 'transparent'
+                    }}
+                    onClick={() => {
+                      if (entry.hasSubmenu) { setMoveSubmenuOpen(true); return }
+                      applySidebarAction(entry.action)
+                    }}
+                  >
+                    <span>{entry.label}</span>
+                    {entry.showStar ? <Star size={13} strokeWidth={1.75} className="shrink-0 opacity-90" /> : null}
+                    {entry.hasSubmenu ? <ChevronRight size={14} strokeWidth={2} className="shrink-0 opacity-60" /> : null}
+                  </button>
+                )
+              })}
+            </>
+          ) : (
+            <>
               <button
-                key={entry.action}
                 type="button"
-                role="menuitem"
-                className={[
-                  'flex w-full items-center rounded-md px-3 py-2 text-left transition-colors',
-                  entry.showStar ? 'justify-between gap-2' : '',
-                ].filter(Boolean).join(' ')}
-                style={
-                  active
-                    ? { background: c.contextHover, color: c.textHeading }
-                    : entry.danger
-                      ? { color: c.danger }
-                      : { color: c.textBright }
-                }
-                onMouseEnter={(e) => {
-                  sidebarContextMenuIndexRef.current = i
-                  setSidebarContextMenuIndex(i)
-                  if (!active) e.currentTarget.style.background = c.contextHoverAlt
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.background = 'transparent'
-                }}
-                onClick={() => applySidebarAction(entry.action)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors"
+                style={{ color: c.textMuted }}
+                onMouseEnter={(e) => e.currentTarget.style.background = c.contextHoverAlt}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onClick={() => setMoveSubmenuOpen(false)}
               >
-                <span>{entry.label}</span>
-                {entry.showStar ? <Star size={13} strokeWidth={1.75} className="shrink-0 opacity-90" /> : null}
+                <ChevronRight size={14} strokeWidth={2} className="shrink-0 rotate-180" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Move to</span>
               </button>
-            )
-          })}
+              {(() => {
+                const target = sidebarContext.item
+                const currentFolderId = target.type === 'note' ? (target.note?.folder_id || null) : null
+                return (
+                  <div className="max-h-[260px] overflow-y-auto scroll-thin">
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors"
+                      style={currentFolderId === null ? { color: c.accent } : { color: c.textBright }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = c.contextHoverAlt}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      onClick={() => handleMoveToFolder(null)}
+                    >
+                      <FileX size={14} strokeWidth={1.75} className="shrink-0" style={{ color: currentFolderId === null ? c.accent : c.iconMuted }} />
+                      <span className="flex-1 truncate">No folder</span>
+                      {currentFolderId === null && <Check size={14} strokeWidth={2.5} className="shrink-0" style={{ color: c.accent }} />}
+                    </button>
+                    {folders.length > 0 && (
+                      <div className="mx-2 my-1 h-px" style={{ background: c.border }} />
+                    )}
+                    {folders.map((folder) => {
+                      const isCurrent = folder.id === currentFolderId
+                      return (
+                        <button
+                          key={folder.id}
+                          type="button"
+                          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors"
+                          style={isCurrent ? { color: c.accent } : { color: c.textBright }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = c.contextHoverAlt}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          onClick={() => handleMoveToFolder(folder.id)}
+                        >
+                          <Folder size={14} strokeWidth={1.75} className="shrink-0" style={{ color: isCurrent ? c.accent : c.icon }} />
+                          <span className="flex-1 truncate">{folder.name || 'New Folder'}</span>
+                          {isCurrent && <Check size={14} strokeWidth={2.5} className="shrink-0" style={{ color: c.accent }} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </>
+          )}
         </div>
       </>
     )}

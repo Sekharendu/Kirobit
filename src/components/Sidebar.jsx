@@ -162,7 +162,7 @@ export function Sidebar({
               </span>
               <div className="flex flex-col min-w-0">
                 <span className="text-[15px] font-semibold tracking-tight truncate" style={{ color: c.textHeading }}>
-                  {user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'}&apos;s Notes
+                  {(user?.user_metadata?.full_name || user?.user_metadata?.name || 'User').split(' ')[0]}&apos;s Kiroku
                 </span>
               </div>
             </div>
@@ -237,7 +237,7 @@ export function Sidebar({
             </span>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold tracking-tight truncate min-w-0" style={{ color: c.textHeading }}>
-                {user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'}'s Notes
+                {(user?.user_metadata?.full_name || user?.user_metadata?.name || 'User').split(' ')[0]}'s Kiroku
               </span>
               <span className="text-[11px]" style={{ color: c.textSubtle }}>Personal workspace</span>
             </div>
@@ -519,6 +519,7 @@ export function Sidebar({
                     className="ml-5 mt-0.5 flex w-[calc(100%-1.25rem)] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:scale-[0.98] active:opacity-80"
                     style={{ color: c.text }}
                   >
+                    <FileText size={18} strokeWidth={1.5} className="flex-shrink-0 mt-0.5" style={{ color: c.icon }} />
                     <div className="flex flex-col min-w-0 flex-1 gap-0.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[14px] font-medium truncate flex-1" style={{ color: c.textBright }}>{note.title || 'Untitled'}</span>
@@ -641,6 +642,7 @@ export function Sidebar({
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors active:scale-[0.98] active:opacity-80 mb-0.5"
                   style={{ color: c.text }}
                 >
+                  <FileText size={18} strokeWidth={1.5} className="flex-shrink-0 mt-0.5" style={{ color: c.icon }} />
                   <div className="flex flex-col min-w-0 flex-1 gap-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-[15px] font-medium truncate flex-1" style={{ color: c.textBright }}>{note.title || 'Untitled'}</span>
