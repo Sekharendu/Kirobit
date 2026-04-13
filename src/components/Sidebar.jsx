@@ -466,7 +466,7 @@ export function Sidebar({
                 onDragOver={(e) => handleFolderDragOver(e, folder.id)}
                 onDragLeave={handleFolderDragLeave}
                 onDrop={handleDragDrop}
-                className={classNames("group/folder flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-2.5 text-[14px]")}
+                className={classNames("group/folder flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-1.5 text-[14px]")}
                 style={{
                   ...(!isMobile && selectedFolderId === folder.id && !selectedNoteId
                     ? { background: c.selected, color: c.selectedText }
