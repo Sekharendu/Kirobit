@@ -955,6 +955,7 @@ function App() {
           onToggleFavorite={handleToggleFavorite}
           onDeleteNote={handleDeleteNote}
           isMobile={isMobile}
+          isMobileEditorActive={mobileView === 'editor'}
           theme={theme}
         />
       </main>

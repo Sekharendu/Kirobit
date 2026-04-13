@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
@@ -6,9 +6,59 @@ import Mathematics from '@tiptap/extension-mathematics'
 import Color from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { CodeBlockWithToolbar } from './CodeBlockWithToolbar'
-import { Star, Trash2 } from 'lucide-react'
+import {
+  Star, Trash2, Type, Heading1, Heading2, Heading3, Pilcrow,
+  Bold, Italic, Strikethrough, Highlighter, List, ListOrdered,
+  Code2, Eraser, Palette, X,
+} from 'lucide-react'
 import { getColors } from '../theme'
 import 'katex/dist/katex.min.css'
+
+const MOBILE_FORMAT_GROUPS = [
+  {
+    title: 'Headings',
+    items: [
+      { label: 'Heading 1', command: 'h1', icon: Heading1 },
+      { label: 'Heading 2', command: 'h2', icon: Heading2 },
+      { label: 'Heading 3', command: 'h3', icon: Heading3 },
+      { label: 'Paragraph', command: 'body', icon: Pilcrow },
+    ],
+  },
+  {
+    title: 'Text Style',
+    items: [
+      { label: 'Bold', command: 'bold', icon: Bold },
+      { label: 'Italic', command: 'italic', icon: Italic },
+      { label: 'Strikethrough', command: 'strike', icon: Strikethrough },
+      { label: 'Highlight', command: 'highlight', icon: Highlighter },
+    ],
+  },
+  {
+    title: 'Lists & Blocks',
+    items: [
+      { label: 'Bullet list', command: 'bullet', icon: List },
+      { label: 'Numbered list', command: 'numbered', icon: ListOrdered },
+      { label: 'Code block', command: 'code', icon: Code2 },
+    ],
+  },
+  {
+    title: null,
+    items: [
+      { label: 'Clear formatting', command: 'clear', icon: Eraser, danger: true },
+    ],
+  },
+]
+
+const TEXT_COLORS = [
+  { label: 'Red', color: '#ef4444' },
+  { label: 'Orange', color: '#f97316' },
+  { label: 'Yellow', color: '#eab308' },
+  { label: 'Green', color: '#22c55e' },
+  { label: 'Blue', color: '#3b82f6' },
+  { label: 'Purple', color: '#a855f7' },
+  { label: 'Pink', color: '#ec4899' },
+  { label: 'Gray', color: '#6b7280' },
+]
 
 export function EditorPane({
   loading,
@@ -24,9 +74,13 @@ export function EditorPane({
   onDeleteNote,
   setEditorInstance,
   isMobile = false,
+  isMobileEditorActive = false,
   theme = 'dark',
 }) {
   const c = getColors(theme)
+  const [mobileFormatOpen, setMobileFormatOpen] = useState(false)
+  const isMobileRef = useRef(isMobile)
+  isMobileRef.current = isMobile
   const isFormatMenuOpenRef = useRef(isFormatMenuOpen)
   const onFormatMenuKeyDownRef = useRef(onFormatMenuKeyDown)
   const onSlashKeyRef = useRef(onSlashKey)
@@ -55,7 +109,6 @@ export function EditorPane({
       editorProps: {
         handleDOMEvents: {
           contextmenu: (view, event) => {
-            // ✅ Use event target to check if right-click is inside a code block DOM element
             const target = event.target
             const isInCodeBlock = target.closest('pre') !== null || 
                                   target.closest('code') !== null ||
@@ -72,7 +125,6 @@ export function EditorPane({
 
           keydown: (view, event) => {
             const { $from } = view.state.selection
-            // ✅ Walk up the node tree to check if anywhere in a code block
             let isInCodeBlock = false
             let depth = $from.depth
             while (depth >= 0) {
@@ -83,7 +135,6 @@ export function EditorPane({
               depth--
             }
 
-            // ✅ Tab inside code block
             if (event.key === 'Tab') {
               if (isInCodeBlock) {
                 event.preventDefault()
@@ -93,10 +144,8 @@ export function EditorPane({
               return false
             }
 
-            // ✅ Slash inside code block — just let it type, skip menu entirely
             if (event.key === '/') {
-              if (isInCodeBlock) return false
-              // not in code block — open slash menu
+              if (isInCodeBlock || isMobileRef.current) return false
               setTimeout(() => {
                 const selection = window.getSelection()
                 if (selection && selection.rangeCount > 0) {
@@ -108,7 +157,6 @@ export function EditorPane({
               return false
             }
 
-            // Format menu keyboard nav (only when not in code block)
             if (!isInCodeBlock && isFormatMenuOpenRef.current) {
               const handled = onFormatMenuKeyDownRef.current(event)
               if (handled) return true
@@ -280,12 +328,163 @@ return (
             className={`mb-2 ${isMobile ? 'text-[12px]' : 'text-[11px]'} select-none`}
             style={{ color: c.textMuted }}
           >
-            Type / to open the formatting menu.
+            {isMobile ? 'Tap the format button (T) to style your text.' : 'Type / to open the formatting menu.'}
           </p>
         )}
 
         <EditorContent editor={editor} className="flex-1 overflow-y-auto scroll-thin" />
       </div>
+
+      {/* Mobile format button */}
+      {isMobile && isMobileEditorActive && selectedNote && (
+        <button
+          type="button"
+          onClick={() => setMobileFormatOpen(true)}
+          className="fixed z-40 flex items-center justify-center rounded-full shadow-lg active:scale-95 transition-transform"
+          style={{
+            bottom: 24,
+            right: 20,
+            width: 48,
+            height: 48,
+            background: c.accent,
+            color: '#fff',
+          }}
+          aria-label="Format text"
+        >
+          <Type size={22} strokeWidth={2.2} />
+        </button>
+      )}
+
+      {/* Mobile format bottom sheet */}
+      {isMobile && mobileFormatOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setMobileFormatOpen(false)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl overflow-hidden"
+            style={{
+              background: c.contextBg,
+              borderTop: `1px solid ${c.border}`,
+              maxHeight: '75dvh',
+              animation: 'mobileSheetUp 0.22s ease-out',
+            }}
+          >
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${c.border}` }}>
+              <span className="text-[14px] font-semibold" style={{ color: c.textHeading }}>Formatting</span>
+              <button
+                type="button"
+                onClick={() => setMobileFormatOpen(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-full transition-colors"
+                style={{ color: c.iconMuted, background: c.hover }}
+              >
+                <X size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+            <div className="overflow-y-auto scroll-thin px-2 py-2" style={{ maxHeight: 'calc(75dvh - 52px)' }}>
+              {MOBILE_FORMAT_GROUPS.map((group, gi) => (
+                <div key={gi} className="mb-2 last:mb-0">
+                  {group.title && (
+                    <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: c.textMuted }}>
+                      {group.title}
+                    </p>
+                  )}
+                  {group.items.map((item) => {
+                    const Icon = item.icon
+                    const isActive = editor && (
+                      (item.command === 'bold' && editor.isActive('bold')) ||
+                      (item.command === 'italic' && editor.isActive('italic')) ||
+                      (item.command === 'strike' && editor.isActive('strike')) ||
+                      (item.command === 'highlight' && editor.isActive('highlight')) ||
+                      (item.command === 'h1' && editor.isActive('heading', { level: 1 })) ||
+                      (item.command === 'h2' && editor.isActive('heading', { level: 2 })) ||
+                      (item.command === 'h3' && editor.isActive('heading', { level: 3 })) ||
+                      (item.command === 'bullet' && editor.isActive('bulletList')) ||
+                      (item.command === 'numbered' && editor.isActive('orderedList')) ||
+                      (item.command === 'code' && editor.isActive('codeBlock'))
+                    )
+                    return (
+                      <button
+                        key={item.command}
+                        type="button"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:opacity-70"
+                        style={{
+                          color: item.danger ? c.danger : isActive ? c.accent : c.textBright,
+                          background: isActive ? `${c.accent}12` : 'transparent',
+                        }}
+                        onClick={() => {
+                          if (!editor) return
+                          const chain = editor.chain().focus()
+                          const actions = {
+                            h1: () => chain.toggleHeading({ level: 1 }).run(),
+                            h2: () => chain.toggleHeading({ level: 2 }).run(),
+                            h3: () => chain.toggleHeading({ level: 3 }).run(),
+                            body: () => chain.setParagraph().run(),
+                            bold: () => chain.toggleBold().run(),
+                            italic: () => chain.toggleItalic().run(),
+                            strike: () => chain.toggleStrike().run(),
+                            highlight: () => chain.toggleHighlight().run(),
+                            bullet: () => chain.toggleBulletList().run(),
+                            numbered: () => chain.toggleOrderedList().run(),
+                            code: () => chain.toggleCodeBlock().run(),
+                            clear: () => chain.clearNodes().unsetAllMarks().run(),
+                          }
+                          actions[item.command]?.()
+                          if (['h1', 'h2', 'h3', 'body', 'bullet', 'numbered', 'code', 'clear'].includes(item.command)) {
+                            setMobileFormatOpen(false)
+                          }
+                        }}
+                      >
+                        <Icon size={18} strokeWidth={1.75} className="flex-shrink-0" />
+                        <span className="text-[14px] font-medium">{item.label}</span>
+                        {isActive && <span className="ml-auto text-[11px] font-semibold" style={{ color: c.accent }}>ON</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+
+              {/* Text colors */}
+              <div className="mb-2">
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: c.textMuted }}>
+                  Text Color
+                </p>
+                <div className="flex items-center gap-2 px-3 py-2 flex-wrap">
+                  {TEXT_COLORS.map((tc) => (
+                    <button
+                      key={tc.color}
+                      type="button"
+                      title={tc.label}
+                      onClick={() => {
+                        if (!editor) return
+                        editor.chain().focus().setColor(tc.color).run()
+                      }}
+                      className="flex items-center justify-center h-9 w-9 rounded-lg transition-transform active:scale-110"
+                      style={{ background: `${tc.color}18`, border: `2px solid ${tc.color}` }}
+                    >
+                      <span className="rounded-full" style={{ width: 14, height: 14, background: tc.color }} />
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!editor) return
+                      editor.chain().focus().unsetColor().run()
+                    }}
+                    className="flex items-center justify-center h-9 w-9 rounded-lg transition-transform active:scale-110"
+                    style={{ color: c.danger, background: c.hover }}
+                    title="Reset color"
+                  >
+                    <Eraser size={16} strokeWidth={2} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   )
 }

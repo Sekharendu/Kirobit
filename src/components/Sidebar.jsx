@@ -441,7 +441,7 @@ export function Sidebar({
         {activeTab === SidebarTabs.ALL && folders.map((folder) => (
           <div key={folder.id} className={isMobile ? "mb-1" : "mb-0.5"}>
             {editingItem && editingItem.kind === 'folder' && editingItem.id === folder.id ? (
-              <div className={classNames("flex items-center rounded-md px-2.5 leading-snug", isMobile ? "py-3 text-[15px]" : "py-2.5 text-[15px]")}
+              <div className={classNames("flex items-center rounded-md px-2.5 leading-snug", isMobile ? "py-3 text-[15px]" : "py-2.5 text-[14px]")}
                 style={{ color: c.text }}>
                 <ChevronDown size={isMobile ? 18 : 16} strokeWidth={1.75} className="mr-1 flex-shrink-0" style={{ color: c.iconMuted }} />
                 <Folder size={isMobile ? 19 : 17} strokeWidth={1.75} className="mr-2 flex-shrink-0" style={{ color: c.icon }} />
@@ -454,7 +454,7 @@ export function Sidebar({
                     if (e.key === 'Enter') { e.preventDefault(); onCommitEditing() }
                     if (e.key === 'Escape') { e.preventDefault(); onCancelEditing() }
                   }}
-                  className={classNames("w-full rounded-sm px-1 py-0.5 outline-none", isMobile ? "text-[15px]" : "text-[15px]")}
+                  className={classNames("w-full rounded-sm px-1 py-0.5 outline-none", isMobile ? "text-[15px]" : "text-[14px]")}
                   style={{ background: c.inputBg, color: c.textHeading, border: `1px solid ${c.inputBorder}` }}
                 />
               </div>
@@ -466,7 +466,7 @@ export function Sidebar({
                 onDragOver={(e) => handleFolderDragOver(e, folder.id)}
                 onDragLeave={handleFolderDragLeave}
                 onDrop={handleDragDrop}
-                className={classNames("group/folder flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-2.5 text-[15px]")}
+                className={classNames("group/folder flex w-full items-center justify-between rounded-xl text-left font-medium leading-snug transition-colors", isMobile ? "px-3 py-3 text-[15px]" : "rounded-md px-2.5 py-2.5 text-[14px]")}
                 style={{
                   ...(!isMobile && selectedFolderId === folder.id && !selectedNoteId
                     ? { background: c.selected, color: c.selectedText }

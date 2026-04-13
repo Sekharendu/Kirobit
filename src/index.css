@@ -426,3 +426,9 @@ body {
 
 /* ── Smooth transitions on interactive elements ── */
 button, a, input { transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s; }
+
+/* ── Mobile format sheet slide-up ── */
+@keyframes mobileSheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
