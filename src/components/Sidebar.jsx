@@ -320,6 +320,7 @@ export function Sidebar({
         onClick={(e) => {
           e.stopPropagation()
           onCloseSidebarContext()
+          onSelectFolder(null)
           }}>
 
         {/* Folders */}

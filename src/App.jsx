@@ -274,9 +274,14 @@ function App() {
     setSidebarOpen((open) => !open)
   }, [])
 
+  const notesRef = useRef(notes)
+  notesRef.current = notes
+
   const handleSelectNote = useCallback((noteId) => {
     setSelectedNoteId(noteId)
     setSelectedNoteIds([])
+    const note = notesRef.current.find(n => n.id === noteId)
+    setSelectedFolderId(note?.folder_id || null)
     if (isMobile) setMobileView('editor')
   }, [isMobile])
 
@@ -544,7 +549,7 @@ function App() {
     if (error) console.error('Error updating note', error)
   }
 
-  const handleTitleChange = (e) => updateNoteContent({ title: e.target.value || 'Untitled' })
+  const handleTitleChange = (e) => updateNoteContent({ title: e.target.value })
 
   const handleCreateNote = useCallback(() => {
     const tempId = `temp-${Date.now()}`
@@ -729,7 +734,7 @@ function App() {
     setOpenFolders((prev) => prev.includes(folderId) ? prev.filter((id) => id !== folderId) : [...prev, folderId])
   }
 
-  const clearMenus = () => { closeSidebarContext(); setMenu(null); setColorSubmenu(null) }
+  const clearMenus = () => { closeSidebarContext(); setMenu(null); setColorSubmenu(null); setSelectedFolderId(null) }
 
   const formatMenuPopoverRef = useRef(null)
   const [formatMenuMeasuredPos, setFormatMenuMeasuredPos] = useState(null)
@@ -887,6 +892,12 @@ function App() {
     </div>
 
     {sidebarContext && (
+      <>
+        <div
+          className="fixed inset-0 z-[39]"
+          onClick={(e) => { e.stopPropagation(); closeSidebarContext() }}
+          onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); closeSidebarContext() }}
+        />
         <div
           className="fixed z-40 min-w-[11rem] rounded-xl py-1.5 px-1 text-[13px] shadow-2xl shadow-black/40"
           style={{ top: sidebarContext.y, left: sidebarContext.x, color: c.textBright, background: c.contextBg, border: `1px solid ${c.border}` }}
@@ -931,6 +942,7 @@ function App() {
             )
           })}
         </div>
+      </>
     )}
 
     {/* Unified format menu: same UI for / and right-click (source only affects deleting /) */}
