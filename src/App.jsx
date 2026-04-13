@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 import { Sidebar, SidebarTabs } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
 import { EditorPane } from './components/EditorPane'
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt'
 import './index.css'
 import { Auth } from './components/Auth'
 import { getColors } from './theme'
@@ -1233,6 +1234,8 @@ function App() {
         </button>
       </div>
     )}
+
+    <PwaUpdatePrompt theme={theme} />
   </div>
 )
 }
