@@ -157,8 +157,8 @@ export function Sidebar({
         {isMobile ? (
           <>
             <div className="flex items-center gap-3.5 min-w-0 flex-1">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
-                <KiroBitLogo variant="minimal" size="sm" />
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                <KiroBitLogo variant="minimal" size="xs" />
               </span>
               <div className="flex flex-col min-w-0">
                 <span className="text-[17px] font-bold tracking-tight truncate" style={{ color: c.textHeading }}>
@@ -407,7 +407,8 @@ export function Sidebar({
       )}
 
       {/* Scrollable list */}
-      <div className={classNames("scroll-thin flex-1 overflow-y-auto", isMobile ? "px-4 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))]" : "px-2 py-2")}
+      <div className={classNames("scroll-thin flex-1 overflow-y-auto", isMobile ? "px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]" : "px-2 py-2")}
+        style={isMobile ? { borderTop: `1px solid ${c.border}` } : {}}
         onClick={(e) => {
           e.stopPropagation()
           onCloseSidebarContext()
@@ -612,11 +613,10 @@ export function Sidebar({
         ))}
 
         {/* Standalone / Favorites notes */}
-        <div className={activeTab === SidebarTabs.ALL && folders.length > 0 ? (isMobile ? 'mt-2 pt-2' : 'mt-2') : ''} 
+        <div className={activeTab === SidebarTabs.ALL && folders.length > 0 ? (isMobile ? 'mt-1' : 'mt-2') : ''} 
           onDragOver={handleStandaloneDragOver}
           onDrop={handleDragDrop}
           style={{
-            ...(activeTab === SidebarTabs.ALL && folders.length > 0 && isMobile ? { borderTop: `1px solid ${c.border}` } : {}),
             ...(dragState && !isMobile ? { minHeight: 40 } : {}),
             ...(dragState && dropTarget?.type === 'standalone' ? { background: `${c.accent}10`, borderRadius: 8 } : {}),
           }}>
