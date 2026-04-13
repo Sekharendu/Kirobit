@@ -77,7 +77,10 @@ export function TopBar({
                     || user?.user_metadata?.picture   // ✅ Google fallback
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 px-4 pl-3 flex-shrink-0" style={{ background: c.mainBg }}>
+    <header
+      className="flex h-14 shrink-0 items-center gap-3 px-4 pl-3 flex-shrink-0"
+      style={{ background: !isMobile && theme === 'dark' ? c.sidebarBg : c.mainBg }}
+    >
       {isMobile ? (
         <button
           type="button"

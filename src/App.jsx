@@ -908,7 +908,7 @@ function App() {
       {!isMobile && sidebarOpen && (
         <div
           className="flex-shrink-0 w-1 cursor-col-resize flex items-center justify-center group"
-          style={{ background: c.mainBg }}
+          style={{ background: !isMobile && theme === 'dark' ? c.sidebarBg : c.mainBg }}
           onMouseDown={handleDragStart}
           onTouchStart={handleTouchStart}
         >
@@ -921,7 +921,7 @@ function App() {
 
       <main
         className="flex flex-1 flex-col min-h-0 overflow-hidden min-w-0"
-        style={{ background: c.mainBg }}
+        style={{ background: !isMobile && theme === 'dark' ? c.sidebarBg : c.mainBg }}
       >
         <TopBar
           notes={notes}

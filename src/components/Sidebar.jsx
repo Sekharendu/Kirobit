@@ -175,7 +175,7 @@ export function Sidebar({
         background: isMobile
           ? c.sidebarMobileBg
           : (theme === 'dark' ? c.mainBg : c.sidebarBg),
-        borderRight: isMobile ? 'none' : `1px solid ${c.border}`,
+        borderRight: isMobile ? 'none' : (theme === 'dark' ? 'none' : `1px solid ${c.border}`),
       }}>
 
       {/* Header */}
