@@ -208,7 +208,7 @@ return (
             onChange={onTitleChange}
             className="flex-1 bg-transparent min-w-0 font-bold tracking-tight focus:outline-none"
             style={{
-              fontSize: 'clamp(1.25rem, 4vw, 1.75rem)',
+              fontSize: isMobile ? 'clamp(1.375rem, 5vw, 1.875rem)' : 'clamp(1.25rem, 4vw, 1.75rem)',
               color: c.textHeading,
               letterSpacing: '-0.025em',
             }}
@@ -251,12 +251,21 @@ return (
           )}
         </div>
 
-        <p className="mb-4 text-[11px] font-medium tracking-wide uppercase" style={{ color: c.lastEdited, letterSpacing: '0.06em' }}>
-          Edited{' '}
-          {selectedNote.updated_at
-            ? new Date(selectedNote.updated_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-            : 'just now'}
-        </p>
+        <div className={`mb-4 ${isMobile ? 'text-[12px]' : 'text-[11px]'} font-medium flex items-center gap-2`} style={{ color: c.lastEdited }}>
+          <span>
+            Created{' '}
+            {selectedNote.created_at
+              ? new Date(selectedNote.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'just now'}
+          </span>
+          <span style={{ color: c.borderLight }}>·</span>
+          <span>
+            Edited{' '}
+            {selectedNote.updated_at
+              ? new Date(selectedNote.updated_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : 'just now'}
+          </span>
+        </div>
 
         <EditorContent editor={editor} className="flex-1 overflow-y-auto scroll-thin" />
       </div>

@@ -301,52 +301,53 @@ export function Sidebar({
           </>
         ) : (
           <>
+            <div className="flex rounded-lg p-0.5 flex-1" style={{ background: c.hover }}>
+              <button
+                type="button"
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[12px] font-medium"
+                style={{
+                  transition: 'background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
+                  ...(activeTab === SidebarTabs.ALL
+                    ? { background: c.sidebarBg, color: c.textHeading, boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
+                    : { background: 'transparent', color: c.textMuted, boxShadow: 'none' }),
+                }}
+                onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.ALL); onSelectFolder(null) }}
+              >
+                <List size={14} strokeWidth={2} />
+                All
+              </button>
+              <button
+                type="button"
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[12px] font-medium"
+                style={{
+                  transition: 'background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
+                  ...(activeTab === SidebarTabs.FAVORITES
+                    ? { background: c.sidebarBg, color: c.favorite, boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
+                    : { background: 'transparent', color: c.textMuted, boxShadow: 'none' }),
+                }}
+                onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.FAVORITES); onSelectFolder(null) }}
+              >
+                <Star size={13} strokeWidth={2} fill={activeTab === SidebarTabs.FAVORITES ? c.favorite : 'none'} style={{ transition: 'fill 0.25s ease' }} />
+                Favorites
+              </button>
+            </div>
             <button
               type="button"
-              className="flex items-center justify-center rounded-md transition-colors h-8 w-8"
-              style={activeTab === SidebarTabs.ALL
-                ? { background: c.tabActiveBg, color: c.textHeading }
-                : { color: c.iconMuted }}
-              onMouseEnter={(e) => { if (activeTab !== SidebarTabs.ALL) { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText } }}
-              onMouseLeave={(e) => { if (activeTab !== SidebarTabs.ALL) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted } }}
-              onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.ALL); onSelectFolder(null) }}
-            >
-              <List size={17} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md transition-colors h-8 w-8"
-              style={activeTab === SidebarTabs.FAVORITES
-                ? { background: c.tabActiveBg, color: c.favorite }
-                : { color: c.iconMuted }}
-              onMouseEnter={(e) => { if (activeTab !== SidebarTabs.FAVORITES) { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText } }}
-              onMouseLeave={(e) => { if (activeTab !== SidebarTabs.FAVORITES) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted } }}
-              onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.FAVORITES); onSelectFolder(null) }}
-              title="Favorites"
-            >
-              <Star size={17} strokeWidth={1.75} fill={activeTab === SidebarTabs.FAVORITES ? c.favorite : 'none'} />
-            </button>
-            <button
-              type="button"
-              className="ml-auto flex items-center justify-center rounded-md transition-colors h-8 w-8"
-              style={{ color: c.icon }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = c.hover; e.currentTarget.style.color = c.textBright }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.icon }}
-              onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onCreateNote() }}
-              title="New note"
-            >
-              <Plus size={17} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              className="flex items-center justify-center rounded-md transition-colors h-8 w-8"
-              style={{ color: c.iconMuted }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = c.contextHoverAlt; e.currentTarget.style.color = c.hoverText }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.iconMuted }}
+              className="flex items-center justify-center h-7 w-7 rounded-lg transition-colors flex-shrink-0"
+              style={{ color: c.icon, background: c.hover }}
               onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onCreateFolder() }}
               title="New folder"
             >
-              <FolderPlus size={17} strokeWidth={1.75} />
+              <FolderPlus size={15} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              className="flex items-center justify-center h-7 w-7 rounded-lg transition-colors flex-shrink-0"
+              style={{ color: '#fff', background: c.accent }}
+              onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onCreateNote() }}
+              title="New note"
+            >
+              <Plus size={15} strokeWidth={2.5} />
             </button>
           </>
         )}
@@ -396,7 +397,7 @@ export function Sidebar({
                       style={{ color: c.text, borderBottom: `1px solid ${c.borderLight}` }}
                     >
                       <span className="text-[14px] font-medium truncate" style={{ color: c.textBright }}>{note.title || 'Untitled'}</span>
-                      <span className="text-xs truncate" style={{ color: c.textMuted }}>{note.content?.replace(/<[^>]*>/g, '').slice(0, 60)}...</span>
+                      <span className="text-xs truncate" style={{ color: c.textMuted }}>{note.content?.replace(/<\/?(p|div|br|li|h[1-6])[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 60)}...</span>
                     </li>
                   ))}
                 </ul>
@@ -533,7 +534,7 @@ export function Sidebar({
                         {note.is_favorite && <Star size={13} fill={c.favorite} color={c.favorite} className="flex-shrink-0" />}
                       </div>
                       <span className="text-[12px] truncate" style={{ color: c.textMuted }}>
-                        {note.content?.replace(/<[^>]*>/g, '').slice(0, 50) || 'Empty note'}
+                        {note.content?.replace(/<\/?(p|div|br|li|h[1-6])[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 50) || 'Empty note'}
                       </span>
                     </div>
                     <button
@@ -577,7 +578,7 @@ export function Sidebar({
                       ...(selectedNoteId === note.id
                         ? { background: c.selected, color: c.selectedText }
                         : selectedNoteIds.includes(note.id)
-                          ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
+                          ? { background: c.multiSelect, color: c.multiSelectText }
                           : { color: c.text }),
                       cursor: dragState?.noteId === note.id ? 'grabbing' : 'grab',
                       ...(dragState?.noteId === note.id ? { opacity: 0.4 } : {}),
@@ -612,8 +613,13 @@ export function Sidebar({
           </div>
         ))}
 
+        {/* Folder/note divider - mobile */}
+        {isMobile && activeTab === SidebarTabs.ALL && folders.length > 0 && (
+          <div className="mx-3 my-2" style={{ height: 1, background: c.border }} />
+        )}
+
         {/* Standalone / Favorites notes */}
-        <div className={activeTab === SidebarTabs.ALL && folders.length > 0 ? (isMobile ? 'mt-1' : 'mt-2') : ''} 
+        <div className={activeTab === SidebarTabs.ALL && folders.length > 0 ? (isMobile ? '' : 'mt-2') : ''} 
           onDragOver={handleStandaloneDragOver}
           onDrop={handleDragDrop}
           style={{
@@ -662,7 +668,7 @@ export function Sidebar({
                       </span>
                       <span className="text-[11px] flex-shrink-0" style={{ color: c.borderLight }}>·</span>
                       <span className="text-[12px] truncate" style={{ color: c.textMuted }}>
-                        {note.content?.replace(/<[^>]*>/g, '').slice(0, 40) || 'Empty note'}
+                        {note.content?.replace(/<\/?(p|div|br|li|h[1-6])[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 40) || 'Empty note'}
                       </span>
                     </div>
                   </div>
@@ -707,7 +713,7 @@ export function Sidebar({
                     ...(selectedNoteId === note.id
                       ? { background: c.selected, color: c.selectedText }
                       : selectedNoteIds.includes(note.id)
-                        ? { background: c.multiSelect, color: c.multiSelectText, boxShadow: selectedNoteId !== note.id ? `inset 2px 0 0 ${c.multiSelectAccent}` : undefined }
+                        ? { background: c.multiSelect, color: c.multiSelectText }
                         : { color: c.text }),
                     ...(!isMobile ? { cursor: dragState?.noteId === note.id ? 'grabbing' : 'grab' } : {}),
                     ...(dragState?.noteId === note.id ? { opacity: 0.4 } : {}),

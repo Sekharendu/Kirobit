@@ -161,7 +161,7 @@ export function TopBar({
                       {note.title || 'Untitled'}
                     </span>
                     <span className="text-xs truncate" style={{ color: c.textMuted }}>
-                      {note.content?.replace(/<[^>]*>/g, '').slice(0, 60)}...
+                      {note.content?.replace(/<\/?(p|div|br|li|h[1-6])[^>]*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 60)}...
                     </span>
                   </li>
                 ))}
