@@ -153,27 +153,27 @@ export function Sidebar({
       style={{ background: isMobile ? c.sidebarMobileBg : c.sidebarBg, borderRight: isMobile ? 'none' : `1px solid ${c.border}` }}>
 
       {/* Header */}
-      <div className={classNames("relative flex shrink-0 items-center justify-between", isMobile ? "px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2" : "h-14 px-4")} ref={isMobile ? userMenuRef : undefined}>
+      <div className={classNames("relative flex shrink-0 items-center justify-between", isMobile ? "px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3" : "h-14 px-4")} ref={isMobile ? userMenuRef : undefined}>
         {isMobile ? (
           <>
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md" aria-hidden>
-                <KiroBitLogo variant="minimal" size="xs" />
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                <KiroBitLogo variant="minimal" size="sm" />
               </span>
               <div className="flex flex-col min-w-0">
-                <span className="text-[15px] font-semibold tracking-tight truncate" style={{ color: c.textHeading }}>
+                <span className="text-[17px] font-bold tracking-tight truncate" style={{ color: c.textHeading }}>
                   {(user?.user_metadata?.full_name || user?.user_metadata?.name || 'User').split(' ')[0]}&apos;s Kiroku
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onToggleTheme?.() }}
-                className="flex items-center justify-center h-9 w-9 rounded-full transition-colors"
+                className="flex items-center justify-center h-10 w-10 rounded-full transition-colors"
                 style={{ color: c.icon }}
               >
-                {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+                {theme === 'dark' ? <Sun size={20} strokeWidth={1.75} /> : <Moon size={20} strokeWidth={1.75} />}
               </button>
               <button
                 type="button"
@@ -187,12 +187,12 @@ export function Sidebar({
                       src={avatarUrl}
                       alt=""
                       referrerPolicy="no-referrer"
-                      className="h-8 w-8 rounded-full object-cover flex-shrink-0"
+                      className="h-9 w-9 rounded-full object-cover flex-shrink-0"
                       style={{ border: `2px solid ${c.border}` }}
                     />
                   ) : (
                     <div
-                      className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                      className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
                       style={{ background: c.hover, border: `2px solid ${c.border}`, color: c.textHeading }}
                     >
                       {user?.email?.[0]?.toUpperCase() ?? '?'}
@@ -253,10 +253,13 @@ export function Sidebar({
             <div className="flex rounded-lg p-0.5 flex-1" style={{ background: c.hover }}>
               <button
                 type="button"
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-[13px] font-medium transition-colors"
-                style={activeTab === SidebarTabs.ALL
-                  ? { background: c.sidebarMobileBg, color: c.textHeading, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }
-                  : { color: c.textMuted }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-[13px] font-medium"
+                style={{
+                  transition: 'background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease',
+                  ...(activeTab === SidebarTabs.ALL
+                    ? { background: c.sidebarMobileBg, color: c.textHeading, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }
+                    : { background: 'transparent', color: c.textMuted, boxShadow: 'none' }),
+                }}
                 onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.ALL); onSelectFolder(null) }}
               >
                 <List size={15} strokeWidth={2} />
@@ -264,13 +267,16 @@ export function Sidebar({
               </button>
               <button
                 type="button"
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-[13px] font-medium transition-colors"
-                style={activeTab === SidebarTabs.FAVORITES
-                  ? { background: c.sidebarMobileBg, color: c.favorite, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }
-                  : { color: c.textMuted }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-[13px] font-medium"
+                style={{
+                  transition: 'background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease',
+                  ...(activeTab === SidebarTabs.FAVORITES
+                    ? { background: c.sidebarMobileBg, color: c.favorite, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }
+                    : { background: 'transparent', color: c.textMuted, boxShadow: 'none' }),
+                }}
                 onClick={(e) => { e.stopPropagation(); onCloseSidebarContext(); onChangeTab(SidebarTabs.FAVORITES); onSelectFolder(null) }}
               >
-                <Star size={14} strokeWidth={2} fill={activeTab === SidebarTabs.FAVORITES ? c.favorite : 'none'} />
+                <Star size={14} strokeWidth={2} fill={activeTab === SidebarTabs.FAVORITES ? c.favorite : 'none'} style={{ transition: 'fill 0.25s ease' }} />
                 Favorites
               </button>
             </div>
