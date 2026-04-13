@@ -376,7 +376,7 @@ export function Sidebar({
 
       {/* Mobile search bar */}
       {isMobile && (
-        <div className="relative px-5 pb-3 pt-1" ref={searchRef}>
+        <div className="relative px-5 py-2" ref={searchRef}>
           <div
             className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
             style={showMobileSearch
