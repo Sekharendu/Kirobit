@@ -267,7 +267,7 @@ export function Sidebar({
       </div>
 
       <div className={classNames("flex items-center", isMobile ? "px-5 pb-2 gap-2" : "px-3 py-2 gap-2")}
-        style={isMobile ? { borderBottom: `1px solid ${c.border}` } : {}}>
+        style={{}}>
         {isMobile ? (
           <>
             {/* Pill tab switcher */}
@@ -430,7 +430,7 @@ export function Sidebar({
 
       {/* Scrollable list */}
       <div className={classNames("scroll-thin flex-1 overflow-y-auto", isMobile ? "px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]" : "px-2 py-2")}
-        style={isMobile ? { borderTop: `1px solid ${c.border}` } : {}}
+        style={{}}
         onClick={(e) => {
           e.stopPropagation()
           onCloseSidebarContext()
