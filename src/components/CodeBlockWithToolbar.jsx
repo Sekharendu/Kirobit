@@ -112,4 +112,18 @@ export const CodeBlockWithToolbar = CodeBlock.extend({
   addNodeView() {
     return ReactNodeViewRenderer(CodeBlockToolbarView)
   },
+
+  addKeyboardShortcuts() {
+    return {
+      ...this.parent?.(),
+      Enter: ({ editor }) => {
+        if (!this.editor.isActive('codeBlock')) return false
+        return editor.commands.command(({ tr, state }) => {
+          const { $from } = state.selection
+          tr.insertText('\n', $from.pos, state.selection.to)
+          return true
+        })
+      },
+    }
+  },
 })
