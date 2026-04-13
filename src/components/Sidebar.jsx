@@ -171,7 +171,12 @@ export function Sidebar({
 
   return (
     <aside className="flex flex-col h-full overflow-hidden"
-      style={{ background: isMobile ? c.sidebarMobileBg : c.sidebarBg, borderRight: isMobile ? 'none' : `1px solid ${c.border}` }}>
+      style={{
+        background: isMobile
+          ? c.sidebarMobileBg
+          : (theme === 'dark' ? c.mainBg : c.sidebarBg),
+        borderRight: isMobile ? 'none' : `1px solid ${c.border}`,
+      }}>
 
       {/* Header */}
       <div className={classNames("relative flex shrink-0 items-center justify-between", isMobile ? "px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3" : "h-14 px-4")} ref={isMobile ? userMenuRef : undefined}>

@@ -1,7 +1,7 @@
 const dark = {
   rootBg: '#0c0c0c',
-  mainBg: '#141414',
-  sidebarBg: '#111111',
+  mainBg: '#181818',
+  sidebarBg: '#0f0f0f',
   sidebarMobileBg: '#111111',
   text: '#c0c0c0',
   textBright: '#e8e8e8',
@@ -46,8 +46,8 @@ const dark = {
 
 const light = {
   rootBg: '#f8f8f8',
-  mainBg: '#ffffff',
-  sidebarBg: '#fafafa',
+  mainBg: '#fcfcfc',
+  sidebarBg: '#f3f4f6',
   sidebarMobileBg: '#ffffff',
   text: '#4b5563',
   textBright: '#1f2937',

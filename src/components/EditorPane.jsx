@@ -253,7 +253,7 @@ return (
       <div
         className="flex flex-col flex-1 min-h-0"
         style={{
-          background: c.mainBg,
+          background: !isMobile && theme === 'dark' ? c.sidebarBg : c.mainBg,
           padding: isMobile ? '10px 16px' : 'clamp(10px, 2.4vw, 38px)',
         }}
       >
