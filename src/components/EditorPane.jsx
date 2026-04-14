@@ -226,7 +226,10 @@ export function EditorPane({
         </div>
         <button
           type="button"
-          onClick={onCreateNote}
+          onClick={(e) => {
+            e.stopPropagation()
+            onCreateNote(null)
+          }}
           className="rounded-lg px-4 py-2 text-sm font-medium transition-all"
           style={{
             background: theme === 'dark' ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)',
