@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['app-logo.png', 'kirobit-logo-minimal.svg'],
       manifest: {
-        name: 'Kiroku',
-        short_name: 'Kiroku',
-        description: 'Kiroku notes app',
+        name: 'KiroBit',
+        short_name: 'KiroBit',
+        description: 'KiroBit notes app',
         theme_color: '#111111',
         background_color: '#111111',
         display: 'standalone',
