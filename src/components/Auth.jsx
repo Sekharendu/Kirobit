@@ -1,8 +1,48 @@
+import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { KiroBitLogo } from './KiroBitLogo'
+import { Zap, Pencil, FolderHeart, Wifi, Palette, Shield } from 'lucide-react'
+import { track } from '@vercel/analytics/react'
+
+const FEATURES = [
+  {
+    icon: Zap,
+    title: 'Lightning Fast',
+    description: 'Opens instantly with local caching. Zero latency on every visit.',
+  },
+  {
+    icon: Pencil,
+    title: 'Rich Text Editor',
+    description: 'Headings, bold, italic, code blocks, text colors, math formulas, and more.',
+  },
+  {
+    icon: FolderHeart,
+    title: 'Folders & Favorites',
+    description: 'Organize notes in nested folders. Star the ones that matter most.',
+  },
+  {
+    icon: Wifi,
+    title: 'Works Offline',
+    description: 'Install as a PWA on any device. Write anywhere — syncs when you\'re back online.',
+  },
+  {
+    icon: Palette,
+    title: 'Dark & Light Themes',
+    description: 'Beautifully designed for both modes. Easy on the eyes, day or night.',
+  },
+  {
+    icon: Shield,
+    title: 'Free Forever',
+    description: 'No paywalls. No ads. No limits. Your notes, your privacy, your control.',
+  },
+]
 
 export function Auth() {
+  const [loggingIn, setLoggingIn] = useState(null)
+
   const handleGoogle = async () => {
+    setLoggingIn('google')
+    track('signin_clicked', { provider: 'google' })
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin }
@@ -10,6 +50,8 @@ export function Auth() {
   }
 
   const handleGithub = async () => {
+    setLoggingIn('github')
+    track('signin_clicked', { provider: 'github' })
     await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: { redirectTo: window.location.origin }
@@ -18,11 +60,10 @@ export function Auth() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center px-5"
+      className="flex min-h-screen flex-col items-center justify-center px-5 py-12 gap-10"
       style={{ background: '#050505' }}
     >
       <div className="relative w-full max-w-[400px]">
-        {/* Single card — everything in one surface so there's one clear object on screen */}
         <div
           className="rounded-3xl px-8 pt-10 pb-8"
           style={{
@@ -31,7 +72,6 @@ export function Auth() {
             boxShadow: '0 0 80px rgba(16, 185, 129, 0.06), 0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           }}
         >
-          {/* Logo + headline */}
           <div className="mb-8 flex flex-col items-center gap-4">
             <div
               className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl overflow-hidden"
@@ -53,12 +93,12 @@ export function Auth() {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex flex-col gap-3">
             <button
               type="button"
               onClick={handleGoogle}
-              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-[14px] font-medium transition-all cursor-pointer"
+              disabled={loggingIn !== null}
+              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-[14px] font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: '#f5f5f5',
                 color: '#111',
@@ -79,7 +119,7 @@ export function Auth() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Continue with Google
+              {loggingIn === 'google' ? 'Redirecting…' : 'Continue with Google'}
             </button>
 
             <div className="flex items-center gap-3 py-0.5">
@@ -91,7 +131,8 @@ export function Auth() {
             <button
               type="button"
               onClick={handleGithub}
-              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-[14px] font-medium transition-all cursor-pointer"
+              disabled={loggingIn !== null}
+              className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-[14px] font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: '#222',
                 color: '#d0d0d0',
@@ -109,16 +150,43 @@ export function Auth() {
               <svg className="h-5 w-5 fill-current flex-shrink-0" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
               </svg>
-              Continue with GitHub
+              {loggingIn === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
             </button>
           </div>
 
-          {/* Footer inside card */}
           <p className="mt-6 text-center text-[11px] leading-relaxed" style={{ color: '#555' }}>
             By signing in, you agree to our terms of service
           </p>
         </div>
       </div>
+
+      <div className="w-full max-w-[880px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {FEATURES.map(({ icon: Icon, title, description }) => (
+          <div
+            key={title}
+            className="flex items-start gap-3.5 rounded-2xl px-4 py-3.5"
+            style={{
+              background: '#0d0d0d',
+              border: '1px solid #1e1e1e',
+            }}
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#34d399' }}
+            >
+              <Icon size={18} strokeWidth={1.75} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold" style={{ color: '#e5e5e5' }}>{title}</p>
+              <p className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#777' }}>{description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px]" style={{ color: '#444' }}>
+        &copy; {new Date().getFullYear()} KiroBit. Built with React, Vite, and Supabase.
+      </p>
     </div>
   )
 }
