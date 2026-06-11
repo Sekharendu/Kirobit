@@ -60,7 +60,7 @@ export function Auth() {
 
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center px-5 py-12 gap-10"
+      className="fixed inset-0 flex flex-col items-center px-5 py-12 gap-10 overflow-y-auto"
       style={{ background: '#050505' }}
     >
       <div className="relative w-full max-w-[400px]">
