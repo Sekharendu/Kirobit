@@ -45,7 +45,18 @@ export default defineConfig({
     }),
   ],
   define: {
-    '__VERSION__': JSON.stringify('1.0.0'),
+    '__VERSION__': JSON.stringify('1.1.0'),
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-tiptap': ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-code-block', '@tiptap/extension-highlight', '@tiptap/extension-color', '@tiptap/extension-text-style', '@tiptap/extension-mathematics'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
   },
 })
 

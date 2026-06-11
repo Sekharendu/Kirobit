@@ -1,7 +1,7 @@
 {
   "name": "trying-cursor",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,8 @@
     "@tiptap/pm": "^3.20.0",
     "@tiptap/react": "^3.20.0",
     "@tiptap/starter-kit": "^3.20.0",
+    "@vercel/analytics": "^2.0.1",
+    "idb-keyval": "^6.2.5",
     "katex": "^0.16.34",
     "lucide-react": "^0.577.0",
     "prop-types": "^15.8.1",

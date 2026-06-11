@@ -7,6 +7,8 @@ import { PwaUpdatePrompt } from './components/PwaUpdatePrompt'
 import './index.css'
 import { Auth } from './components/Auth'
 import { getColors } from './theme'
+import { getCachedNotes, getCachedFolders, cacheNotes, cacheFolders, clearUserCache } from './db'
+import { track } from '@vercel/analytics/react'
 import {
   Star,
   Heading1,
@@ -199,6 +201,7 @@ function App() {
   const [openFolders, setOpenFolders] = useState([])
   const editorRef = useRef(null)
   const [editor, setEditor] = useState()
+  const cacheTimerRef = useRef(null)
   const [menu, setMenu] = useState(null)
   const [slashMenuIndex, setSlashMenuIndex] = useState(0)
   const [user, setUser] = useState(null)
@@ -218,6 +221,7 @@ function App() {
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark'
+      track('theme_changed', { theme: next })
       localStorage.setItem('app-theme', next)
       return next
     })
@@ -246,8 +250,11 @@ function App() {
       setUser(session?.user ?? null)
       setAuthLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      if (event === 'SIGNED_IN') {
+        track('signed_in')
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -257,23 +264,52 @@ function App() {
     if (!user) return
     const load = async () => {
       setLoading(true)
+
+      const [cachedNotes, cachedFolders] = await Promise.all([
+        getCachedNotes(user.id),
+        getCachedFolders(user.id),
+      ])
+      if (cachedNotes && cachedFolders) {
+        setNotes(cachedNotes)
+        setFolders(cachedFolders)
+        setLoading(false)
+      }
+
       const [{ data: foldersData }, { data: notesData }] = await Promise.all([
         supabase.from('folders').select('*')
-          .eq('user_id', user.id)  // ✅ only this user's folders
+          .eq('user_id', user.id)
           .order('created_at', { ascending: true }),
         supabase.from('notes').select('*')
-          .eq('user_id', user.id)  // ✅ only this user's notes
+          .eq('user_id', user.id)
           .order('updated_at', { ascending: false }),
       ])
-      setFolders(foldersData ?? [])
-      setNotes(notesData ?? [])
-      if (!selectedNoteId && (notesData?.length ?? 0) > 0) {
-        setSelectedNoteId(notesData[0].id)
+      const freshNotes = notesData ?? []
+      const freshFolders = foldersData ?? []
+      setFolders(freshFolders)
+      setNotes(freshNotes)
+      await Promise.all([
+        cacheNotes(user.id, freshNotes),
+        cacheFolders(user.id, freshFolders),
+      ])
+
+      if (!selectedNoteId && freshNotes.length > 0) {
+        setSelectedNoteId(freshNotes[0].id)
       }
       setLoading(false)
     }
     load()
   }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    if (notes.length === 0 && folders.length === 0) return
+    clearTimeout(cacheTimerRef.current)
+    cacheTimerRef.current = setTimeout(() => {
+      cacheNotes(user.id, notes)
+      cacheFolders(user.id, folders)
+    }, 2000)
+    return () => clearTimeout(cacheTimerRef.current)
+  }, [notes, folders, user])
 
   // ── Handlers ──────────────────────────────────────────────────────
   
@@ -350,6 +386,7 @@ function App() {
   }
 
   const handleLogout = async () => {
+    if (user?.id) { clearUserCache(user.id) }
     await supabase.auth.signOut()
     setUser(null)
     setNotes([])
@@ -577,6 +614,7 @@ function App() {
       user_id: user?.id, title: 'Untitled', content: '', folder_id: targetFolder,
     }]).select().single().then(({ data, error }) => {
       if (error) { console.error('Error creating note', error); return }
+      track('note_created')
       setNotes(prev => {
         const temp = prev.find(n => n.id === tempId)
         if (!temp) return prev
@@ -598,6 +636,7 @@ function App() {
 
   const handleToggleFavorite = async (note) => {
     const next = !note.is_favorite
+    track(next ? 'note_favorited' : 'note_unfavorited')
     setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, is_favorite: next } : n)))
     const { error } = await supabase.from('notes').update({ is_favorite: next }).eq('id', note.id)
     if (error) console.error('Error updating favorite', error)
@@ -753,6 +792,7 @@ function App() {
         const { data: { user } } = await supabase.auth.getUser()
         const { data, error } = await supabase.from('folders').insert([{ user_id: user?.id, name }]).select().single()
         if (error) { console.error('Error creating folder', error); return }
+        track('folder_created')
         setFolders((prev) => prev.map((f) => f.id === editingItem.id ? { ...f, ...data } : f))
       } else {
         setFolders((prev) => prev.map((f) => f.id === editingItem.id ? { ...f, name } : f))
