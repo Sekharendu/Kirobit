@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { supabase } from './supabaseClient'
+import { apiWithRetry } from './apiWithRetry'
 import { Sidebar, SidebarTabs } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
 import { EditorPane } from './components/EditorPane'
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt'
+import Toast from './components/Toast'
 import './index.css'
 import { Auth } from './components/Auth'
 import { getColors } from './theme'
@@ -216,6 +218,7 @@ function App() {
   const colorSubmenuBtnRef = useRef(null)
   const [colorSubmenu, setColorSubmenu] = useState(null)
   const [moveSubmenuOpen, setMoveSubmenuOpen] = useState(false)
+  const [toast, setToast] = useState(null)
   const c = getColors(theme)
 
   const toggleTheme = useCallback(() => {
@@ -589,8 +592,11 @@ function App() {
     const next = { ...selectedNote, ...changes, updated_at: new Date().toISOString() }
     setNotes((prev) => prev.map((n) => (n.id === selectedNote.id ? next : n)))
     if (String(selectedNote.id).startsWith('temp-')) return
-    const { error } = await supabase.from('notes').update(changes).eq('id', selectedNote.id)
-    if (error) console.error('Error updating note', error)
+    const { permanent } = await apiWithRetry(
+      () => supabase.from('notes').update(changes).eq('id', selectedNote.id),
+      'updateNote'
+    )
+    if (permanent) setToast({ message: 'Failed to save note. Check your connection.', type: 'error' })
   }
 
   const handleTitleChange = (e) => updateNoteContent({ title: e.target.value })
@@ -610,17 +616,23 @@ function App() {
     }
     if (isMobile) setMobileView('editor')
 
-    supabase.from('notes').insert([{
-      user_id: user?.id, title: 'Untitled', content: '', folder_id: targetFolder,
-    }]).select().single().then(({ data, error }) => {
-      if (error) { console.error('Error creating note', error); return }
+    apiWithRetry(
+      () => supabase.from('notes').insert([{
+        user_id: user?.id, title: 'Untitled', content: '', folder_id: targetFolder,
+      }]).select().single(),
+      'createNote'
+    ).then(({ data, permanent }) => {
+      if (permanent) { setToast({ message: 'Failed to create note. Check your connection.', type: 'error' }); return }
       track('note_created')
       setNotes(prev => {
         const temp = prev.find(n => n.id === tempId)
         if (!temp) return prev
         if (temp.title !== 'Untitled' || temp.content !== '') {
-          supabase.from('notes').update({ title: temp.title, content: temp.content })
-            .eq('id', data.id).then(({ error: e }) => { if (e) console.error('Sync error', e) })
+          apiWithRetry(
+            () => supabase.from('notes').update({ title: temp.title, content: temp.content })
+              .eq('id', data.id),
+            'syncTempNote'
+          ).then(({ permanent: p }) => { if (p) setToast({ message: 'Failed to sync note. Check your connection.', type: 'error' }) })
         }
         return prev.map(n => n.id === tempId ? { ...n, id: data.id, created_at: data.created_at } : n)
       })
@@ -638,8 +650,11 @@ function App() {
     const next = !note.is_favorite
     track(next ? 'note_favorited' : 'note_unfavorited')
     setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, is_favorite: next } : n)))
-    const { error } = await supabase.from('notes').update({ is_favorite: next }).eq('id', note.id)
-    if (error) console.error('Error updating favorite', error)
+    const { permanent } = await apiWithRetry(
+      () => supabase.from('notes').update({ is_favorite: next }).eq('id', note.id),
+      'toggleFavorite'
+    )
+    if (permanent) setToast({ message: 'Failed to update favorite. Check your connection.', type: 'error' })
   }
 
   const handleDeleteNote = async (noteId) => {
@@ -647,8 +662,11 @@ function App() {
     setNotes((prev) => prev.filter((n) => n.id !== noteId))
     if (selectedNoteId === noteId) setSelectedNoteId(null)
     if (!String(noteId).startsWith('temp-')) {
-      const { error } = await supabase.from('notes').delete().eq('id', noteId)
-      if (error) console.error('Error deleting note', error)
+      const { permanent } = await apiWithRetry(
+        () => supabase.from('notes').delete().eq('id', noteId),
+        'deleteNote'
+      )
+      if (permanent) setToast({ message: 'Failed to delete note. Check your connection.', type: 'error' })
     }
   }
 
@@ -675,8 +693,11 @@ function App() {
       setOpenFolders(prev => [...prev, targetFolderId])
     }
     if (!String(noteId).startsWith('temp-')) {
-      const { error } = await supabase.from('notes').update({ folder_id: targetFolderId }).eq('id', noteId)
-      if (error) console.error('Error moving note', error)
+      const { permanent } = await apiWithRetry(
+        () => supabase.from('notes').update({ folder_id: targetFolderId }).eq('id', noteId),
+        'moveNote'
+      )
+      if (permanent) setToast({ message: 'Failed to move note. Check your connection.', type: 'error' })
     }
   }, [openFolders])
 
@@ -711,7 +732,11 @@ function App() {
         if (!window.confirm('Delete this folder? Notes in it will become standalone notes.')) return
         setFolders((prev) => prev.filter((f) => f.id !== target.folder.id))
         setNotes((prev) => prev.map((n) => n.folder_id === target.folder.id ? { ...n, folder_id: null } : n))
-        await supabase.from('folders').delete().eq('id', target.folder.id)
+        const { permanent: folderPerm } = await apiWithRetry(
+          () => supabase.from('folders').delete().eq('id', target.folder.id),
+          'deleteFolder'
+        )
+        if (folderPerm) setToast({ message: 'Failed to delete folder. Check your connection.', type: 'error' })
       } else {
         await handleDeleteNote(target.note.id)
       }
@@ -724,8 +749,11 @@ function App() {
       setSelectedNoteIds([])
       const realIds = ids.filter(id => !String(id).startsWith('temp-'))
       if (realIds.length > 0) {
-        const { error } = await supabase.from('notes').delete().in('id', realIds)
-        if (error) console.error('Error deleting notes', error)
+        const { permanent: bulkPerm } = await apiWithRetry(
+          () => supabase.from('notes').delete().in('id', realIds),
+          'deleteNotes'
+        )
+        if (bulkPerm) setToast({ message: 'Failed to delete some notes. Check your connection.', type: 'error' })
       }
     }
     closeSidebarContext()
@@ -790,19 +818,28 @@ function App() {
     if (editingItem.kind === 'folder') {
       if (editingItem.mode === 'create') {
         const { data: { user } } = await supabase.auth.getUser()
-        const { data, error } = await supabase.from('folders').insert([{ user_id: user?.id, name }]).select().single()
-        if (error) { console.error('Error creating folder', error); return }
+        const { data, permanent } = await apiWithRetry(
+          () => supabase.from('folders').insert([{ user_id: user?.id, name }]).select().single(),
+          'createFolder'
+        )
+        if (permanent) { setToast({ message: 'Failed to create folder. Check your connection.', type: 'error' }); return }
         track('folder_created')
         setFolders((prev) => prev.map((f) => f.id === editingItem.id ? { ...f, ...data } : f))
       } else {
         setFolders((prev) => prev.map((f) => f.id === editingItem.id ? { ...f, name } : f))
-        const { error } = await supabase.from('folders').update({ name }).eq('id', editingItem.id)
-        if (error) console.error('Error renaming folder', error)
+        const { permanent: renameFolderPerm } = await apiWithRetry(
+          () => supabase.from('folders').update({ name }).eq('id', editingItem.id),
+          'renameFolder'
+        )
+        if (renameFolderPerm) setToast({ message: 'Failed to rename folder. Check your connection.', type: 'error' })
       }
     } else if (editingItem.kind === 'note') {
       setNotes((prev) => prev.map((n) => n.id === editingItem.id ? { ...n, title: name } : n))
-      const { error } = await supabase.from('notes').update({ title: name }).eq('id', editingItem.id)
-      if (error) console.error('Error renaming note', error)
+      const { permanent: renameNotePerm } = await apiWithRetry(
+        () => supabase.from('notes').update({ title: name }).eq('id', editingItem.id),
+        'renameNote'
+      )
+      if (renameNotePerm) setToast({ message: 'Failed to rename note. Check your connection.', type: 'error' })
     }
     setEditingItem(null)
   }
@@ -837,8 +874,11 @@ function App() {
     })
 
     if (folderChanged && !String(noteId).startsWith('temp-')) {
-      const { error } = await supabase.from('notes').update({ folder_id: targetFolderId ?? null }).eq('id', noteId)
-      if (error) console.error('Error moving note', error)
+      const { permanent: dropPerm } = await apiWithRetry(
+        () => supabase.from('notes').update({ folder_id: targetFolderId ?? null }).eq('id', noteId),
+        'dropNote'
+      )
+      if (dropPerm) setToast({ message: 'Failed to move note. Check your connection.', type: 'error' })
     }
   }, [openFolders])
 
@@ -1277,6 +1317,13 @@ function App() {
     )}
 
     <PwaUpdatePrompt theme={theme} />
+    {toast && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onDismiss={() => setToast(null)}
+      />
+    )}
   </div>
 )
 }
